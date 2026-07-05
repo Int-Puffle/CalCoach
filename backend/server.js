@@ -1,15 +1,15 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
 require('dotenv').config();
+const foodLogRoutes = require('./routes/foodLog');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/api/foodlog', foodLogRoutes);
 
-const client = new MongoClient(process.env.MONGO_URI);
-
-client.connect()
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Connection error:', err));
 
