@@ -36,8 +36,8 @@ jobs:
             set -e
             cd /root/CalCoach
             git pull origin main
-            cd backend && npm install --omit=dev
-            cd ../frontend && npm install && npm run build
+            cd backend && npm ci --omit=dev
+            cd ../frontend && npm ci && npm run build
             rm -rf /var/www/calcoach/*
             cp -r dist/* /var/www/calcoach/
             pm2 restart calcoach-backend
