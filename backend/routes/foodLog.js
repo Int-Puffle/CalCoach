@@ -1,7 +1,9 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const FoodLog = require('../models/FoodLog');
 const PetState = require('../models/PetState');
+const { calculateMoodFromCalories } = require('../utils/mood');
 
 // POST /api/foodlog - log a meal and update pet mood
 router.post('/', async (req, res) => {
@@ -21,17 +23,7 @@ router.post('/', async (req, res) => {
 
     const todaysLogs = await FoodLog.find({ userId, loggedAt: { $gte: todayStart } });
     const totalCalories = todaysLogs.reduce((sum, log) => sum + log.calories, 0);
-
-    // simple mood logic - tweak later
-    let moodScore = 50;
-    if (totalCalories > 0 && totalCalories <= 2200) moodScore = 80;
-    else if (totalCalories > 2200 && totalCalories <= 2800) moodScore = 60;
-    else if (totalCalories > 2800) moodScore = 30;
-
-    let mood = 'neutral';
-    if (moodScore >= 70) mood = 'happy';
-    else if (moodScore >= 45) mood = 'neutral';
-    else mood = 'sad';
+    const { mood, moodScore } = calculateMoodFromCalories(totalCalories);
 
     const petState = await PetState.findOneAndUpdate(
       { userId },
@@ -52,6 +44,61 @@ router.get('/petstate/:userId', async (req, res) => {
     res.status(200).json({ petState, error: '' });
   } catch (err) {
     res.status(500).json({ error: err.toString() });
+  }
+});
+
+// GET /api/foodlog/stats/:userId?days=30 - daily calorie/macro/mood history for charts
+router.get('/stats/:userId', async (req, res) => {
+  try {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 90);
+
+    const rangeStart = new Date();
+    rangeStart.setHours(0, 0, 0, 0);
+    rangeStart.setDate(rangeStart.getDate() - (days - 1));
+
+    const dailyTotals = await FoodLog.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(req.params.userId),
+          loggedAt: { $gte: rangeStart },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$loggedAt' } },
+          calories: { $sum: '$calories' },
+          protein: { $sum: '$protein' },
+          carbs: { $sum: '$carbs' },
+          fat: { $sum: '$fat' },
+        },
+      },
+    ]);
+
+    const byDate = new Map(dailyTotals.map((entry) => [entry._id, entry]));
+
+    const history = [];
+    for (let i = 0; i < days; i++) {
+      const day = new Date(rangeStart);
+      day.setDate(day.getDate() + i);
+      const dateKey = day.toISOString().slice(0, 10);
+      const entry = byDate.get(dateKey);
+      const calories = entry?.calories || 0;
+      const { mood, moodScore } = calculateMoodFromCalories(calories);
+
+      history.push({
+        date: dateKey,
+        calories,
+        protein: entry?.protein || 0,
+        carbs: entry?.carbs || 0,
+        fat: entry?.fat || 0,
+        mood,
+        moodScore,
+      });
+    }
+
+    res.status(200).json({ history, error: '' });
+  } catch (err) {
+    res.status(500).json({ error: err.toString(), history: [] });
   }
 });
 

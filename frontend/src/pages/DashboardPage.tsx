@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import FoodLogForm from '../components/FoodLogForm';
 import PetDisplay from '../components/PetDisplay';
+import ProgressTab from '../components/ProgressTab';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
+
+type Tab = 'log' | 'progress';
 
 function DashboardPage() {
   const { user, logout } = useAuth();
   const [mood, setMood] = useState('neutral');
   const [moodScore, setMoodScore] = useState(50);
+  const [activeTab, setActiveTab] = useState<Tab>('log');
   const [searchParams, setSearchParams] = useSearchParams();
   const [verifiedNotice, setVerifiedNotice] = useState<'success' | 'failed' | null>(null);
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -84,14 +88,41 @@ function DashboardPage() {
         </div>
       )}
 
-      <main className="dashboard-grid">
-        <section className="dashboard-card">
-          <PetDisplay mood={mood} moodScore={moodScore} />
-        </section>
-        <section className="dashboard-card">
-          <FoodLogForm userId={user!._id} onLogSuccess={handleLogSuccess} />
-        </section>
-      </main>
+      <nav className="dashboard-tabs">
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'log' ? 'active' : ''}`}
+          onClick={() => setActiveTab('log')}
+        >
+          Log Food
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'progress' ? 'active' : ''}`}
+          onClick={() => setActiveTab('progress')}
+        >
+          Progress
+        </button>
+      </nav>
+
+      {activeTab === 'log' && (
+        <main className="dashboard-grid">
+          <section className="dashboard-card">
+            <PetDisplay mood={mood} moodScore={moodScore} />
+          </section>
+          <section className="dashboard-card">
+            <FoodLogForm userId={user!._id} onLogSuccess={handleLogSuccess} />
+          </section>
+        </main>
+      )}
+
+      {activeTab === 'progress' && (
+        <main className="dashboard-grid dashboard-grid-single">
+          <section className="dashboard-card">
+            <ProgressTab userId={user!._id} calorieGoal={user?.dailyCalorieGoal} />
+          </section>
+        </main>
+      )}
     </div>
   );
 }

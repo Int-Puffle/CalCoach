@@ -154,6 +154,10 @@
   }
 }
 
+.dashboard-grid-single {
+  grid-template-columns: 1fr;
+}
+
 .dashboard-card {
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -340,4 +344,248 @@
 
 .form-message.error {
   color: var(--danger);
+}
+
+/* Dashboard tabs */
+.dashboard-tabs {
+  display: flex;
+  gap: 4px;
+  max-width: 1024px;
+  width: calc(100% - 64px);
+  margin: 20px auto 0;
+
+  @media (max-width: 720px) {
+    width: calc(100% - 40px);
+  }
+}
+
+.tab-btn {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tab-btn:hover {
+  color: var(--text-h);
+}
+
+.tab-btn.active {
+  color: var(--text-h);
+  border-bottom-color: var(--accent);
+}
+
+/* Progress tab */
+.progress-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.progress-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  transition: opacity 0.15s;
+}
+
+.progress-charts.is-refetching {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.range-selector {
+  display: flex;
+  gap: 6px;
+  align-self: flex-start;
+}
+
+.range-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.range-btn:hover {
+  border-color: var(--accent-border);
+}
+
+.range-btn.active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.progress-empty {
+  text-align: center;
+  color: var(--text);
+  padding: 24px 0;
+}
+
+/* Trend chart */
+.trend-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trend-chart-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.trend-chart-header h3 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.chart-legend {
+  list-style: none;
+  display: flex;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.trend-chart-body {
+  position: relative;
+}
+
+.trend-chart-body svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none;
+}
+
+.chart-gridline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart-axis-label {
+  fill: var(--text);
+  font-size: 11px;
+}
+
+.chart-goal-line {
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.6;
+}
+
+.chart-crosshair {
+  stroke: var(--text);
+  stroke-width: 1;
+  opacity: 0.35;
+}
+
+.chart-tooltip {
+  position: absolute;
+  top: 8px;
+  transform: translateX(0);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 8px 12px;
+  font-size: 13px;
+  pointer-events: none;
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.chart-tooltip-date {
+  font-weight: 500;
+  color: var(--text-h);
+  margin-bottom: 4px;
+}
+
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.chart-tooltip-value {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.chart-tooltip-label {
+  color: var(--text);
+}
+
+.chart-table-toggle {
+  align-self: flex-start;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.chart-table-wrap {
+  overflow-x: auto;
+}
+
+.chart-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.chart-table th,
+.chart-table td {
+  padding: 6px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.chart-table th:first-child,
+.chart-table td:first-child {
+  text-align: left;
+}
+
+.chart-table th {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.chart-table td {
+  color: var(--text-h);
 }
