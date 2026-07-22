@@ -9,8 +9,10 @@ const foodLogRoutes = require('./routes/foodLog');
 const authRoutes = require('./routes/auth');
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());
@@ -19,7 +21,10 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: {
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+  }
 }));
 
 app.use(passport.initialize());
