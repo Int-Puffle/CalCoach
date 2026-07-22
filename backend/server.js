@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const passport = require('./config/passport');
 const foodLogRoutes = require('./routes/foodLog');
+const foodSearchRoutes = require('./routes/foodSearch');
 const authRoutes = require('./routes/auth');
 
 const app = express();
@@ -35,6 +36,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/api/foodlog', foodLogRoutes);
+app.use('/api/foodsearch', foodSearchRoutes);
 app.use('/api/auth', authRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
