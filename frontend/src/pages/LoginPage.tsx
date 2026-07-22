@@ -6,7 +6,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="login-page">
+    <main className="login-page">
       <div className="login-card">
         <h1>CalCoach</h1>
         <p>Track your meals. Keep your buddy happy.</p>
@@ -14,7 +14,7 @@ function LoginPage() {
           Sign in with Google
         </button>
       </div>
-    </div>
+    </main>
   );
 }
 

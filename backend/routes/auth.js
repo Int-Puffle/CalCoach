@@ -16,13 +16,10 @@ router.get('/google/callback',
   }
 );
 
-// Check current logged-in user
+// Check current logged-in user. Always 200 - this endpoint reports auth
+// status rather than gating access, so "not logged in" isn't an error.
 router.get('/me', (req, res) => {
-  if (req.user) {
-    res.json({ user: req.user });
-  } else {
-    res.status(401).json({ user: null });
-  }
+  res.json({ user: req.user || null });
 });
 
 // Logout

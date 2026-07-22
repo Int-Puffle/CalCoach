@@ -2,9 +2,9 @@ const request = require('supertest');
 const app = require('../app');
 
 describe('GET /api/auth/me', () => {
-  it('returns 401 with a null user when not logged in', async () => {
+  it('returns 200 with a null user when not logged in', async () => {
     const res = await request(app).get('/api/auth/me');
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
     expect(res.body.user).toBeNull();
   });
 });
