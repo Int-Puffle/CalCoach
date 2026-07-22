@@ -18,10 +18,10 @@ describe('GET /api/foodsearch', () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        products: [
+        hits: [
           {
             product_name: 'Test Cereal',
-            brands: 'TestBrand',
+            brands: ['TestBrand'],
             nutriments: {
               'energy-kcal_100g': 380.4,
               proteins_100g: 9.6,

@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
   }
 
   try {
-    const url = `https://world.openfoodfacts.org/api/v2/search?search_terms=${encodeURIComponent(q)}&fields=product_name,brands,nutriments&page_size=10`;
+    const url = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&page_size=10&fields=product_name,brands,nutriments`;
     const response = await fetch(url, {
       headers: { 'User-Agent': 'CalCoach - Educational Project - https://cal-coach.xyz' },
     });
@@ -19,12 +19,12 @@ router.get('/', async (req, res) => {
     }
 
     const data = await response.json();
-    const results = (data.products || [])
+    const results = (data.hits || [])
       .filter((p) => p.product_name && p.nutriments && p.nutriments['energy-kcal_100g'] != null)
       .slice(0, 10)
       .map((p) => ({
         name: p.product_name,
-        brand: p.brands || '',
+        brand: Array.isArray(p.brands) ? p.brands.join(', ') : (p.brands || ''),
         calories: Math.round(p.nutriments['energy-kcal_100g']),
         protein: Math.round(p.nutriments['proteins_100g'] || 0),
         carbs: Math.round(p.nutriments['carbohydrates_100g'] || 0),
