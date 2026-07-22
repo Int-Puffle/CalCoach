@@ -1,13 +1,33 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const session = require('express-session'); 
+const passport = require('./config/passport'); 
 require('dotenv').config();
 const foodLogRoutes = require('./routes/foodLog');
+const authRoutes = require('./routes/auth');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', 
+  credentials: true
+}));
 app.use(express.json());
+
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/api/foodlog', foodLogRoutes);
+app.use('/api/auth', authRoutes); 
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
