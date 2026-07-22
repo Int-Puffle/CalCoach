@@ -101,6 +101,43 @@
   color: var(--text-h);
 }
 
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: 1024px;
+  width: calc(100% - 64px);
+  margin: 20px auto 0;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  text-align: left;
+
+  @media (max-width: 720px) {
+    width: calc(100% - 40px);
+  }
+}
+
+.banner-warning {
+  background: rgba(230, 162, 60, 0.12);
+  border: 1px solid rgba(230, 162, 60, 0.35);
+  color: var(--text-h);
+}
+
+.banner-success {
+  background: rgba(47, 158, 94, 0.12);
+  border: 1px solid rgba(47, 158, 94, 0.35);
+  color: var(--text-h);
+}
+
+.banner-error {
+  background: rgba(209, 66, 90, 0.12);
+  border: 1px solid rgba(209, 66, 90, 0.35);
+  color: var(--text-h);
+}
+
 .dashboard-grid {
   flex: 1;
   display: grid;
