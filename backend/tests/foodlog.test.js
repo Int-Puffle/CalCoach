@@ -65,6 +65,48 @@ describe('POST /api/foodlog', () => {
   });
 });
 
+describe('POST /api/foodlog coin economy', () => {
+  it('awards 5 coins per meal, plus a one-time 25 bonus for the 3rd meal of the day', async () => {
+    const userId = new mongoose.Types.ObjectId().toString();
+
+    const first = await request(app)
+      .post('/api/foodlog')
+      .send({ userId, foodName: 'Breakfast', calories: 500, protein: 25, carbs: 55, fat: 15 });
+    expect(first.body.coinsAwarded).toBe(5);
+    expect(first.body.mealBonusAwarded).toBe(false);
+    expect(first.body.petState.coins).toBe(5);
+
+    const second = await request(app)
+      .post('/api/foodlog')
+      .send({ userId, foodName: 'Lunch', calories: 700, protein: 35, carbs: 75, fat: 20 });
+    expect(second.body.coinsAwarded).toBe(5);
+    expect(second.body.petState.coins).toBe(10);
+
+    const third = await request(app)
+      .post('/api/foodlog')
+      .send({ userId, foodName: 'Dinner', calories: 700, protein: 35, carbs: 75, fat: 20 });
+    expect(third.body.coinsAwarded).toBe(30);
+    expect(third.body.mealBonusAwarded).toBe(true);
+    expect(third.body.petState.coins).toBe(40);
+
+    const fourth = await request(app)
+      .post('/api/foodlog')
+      .send({ userId, foodName: 'Snack', calories: 100, protein: 5, carbs: 10, fat: 3 });
+    expect(fourth.body.coinsAwarded).toBe(5);
+    expect(fourth.body.mealBonusAwarded).toBe(false);
+    expect(fourth.body.petState.coins).toBe(45);
+  });
+
+  it('includes a mealQuality verdict on the response', async () => {
+    const userId = new mongoose.Types.ObjectId().toString();
+    const res = await request(app)
+      .post('/api/foodlog')
+      .send({ userId, foodName: 'Balanced snack', calories: 600, protein: 30, carbs: 60, fat: 20 });
+
+    expect(['good', 'neutral', 'bad']).toContain(res.body.mealQuality);
+  });
+});
+
 describe('GET /api/foodlog/:userId', () => {
   const userId = new mongoose.Types.ObjectId().toString();
 

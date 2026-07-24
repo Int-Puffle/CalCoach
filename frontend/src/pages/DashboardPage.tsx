@@ -1,18 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import FoodLogForm from '../components/FoodLogForm';
+import FoodLogForm, { type LogSuccessResult } from '../components/FoodLogForm';
 import PetDisplay from '../components/PetDisplay';
 import ProgressTab from '../components/ProgressTab';
+import ShopTab from '../components/ShopTab';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
-type Tab = 'log' | 'progress';
+type Tab = 'log' | 'progress' | 'shop';
 
 function DashboardPage() {
   const { user, logout } = useAuth();
   const [mood, setMood] = useState('neutral');
   const [moodScore, setMoodScore] = useState(50);
-  const [celebrateKey, setCelebrateKey] = useState(0);
+  const [reaction, setReaction] = useState<'good' | 'neutral' | 'bad' | null>(null);
+  const [reactionKey, setReactionKey] = useState(0);
+  const [coins, setCoins] = useState(0);
+  const [equippedBackground, setEquippedBackground] = useState('meadow');
+  const [equippedFurniture, setEquippedFurniture] = useState<string[]>([]);
+  const [loginBonusNotice, setLoginBonusNotice] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('log');
   const [searchParams, setSearchParams] = useSearchParams();
   const [verifiedNotice, setVerifiedNotice] = useState<'success' | 'failed' | null>(null);
@@ -47,10 +53,47 @@ function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleLogSuccess(newMood: string, newMoodScore: number) {
-    setMood(newMood);
-    setMoodScore(newMoodScore);
-    setCelebrateKey((k) => k + 1);
+  // Load coins + equipped items so the scene looks right immediately,
+  // even before the user visits the Shop tab this session.
+  useEffect(() => {
+    fetch(`${API_BASE}/api/shop/state/${user!._id}`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) return;
+        setCoins(data.coins);
+        setEquippedBackground(data.equippedBackground);
+        setEquippedFurniture(data.equippedFurniture);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Claim the once-per-day login bonus.
+  useEffect(() => {
+    fetch(`${API_BASE}/api/shop/claim-daily`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user!._id }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.awarded) {
+          setCoins(data.coins);
+          setLoginBonusNotice(data.coinsAwarded);
+          setTimeout(() => setLoginBonusNotice(null), 4000);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleLogSuccess(result: LogSuccessResult) {
+    setMood(result.mood);
+    setMoodScore(result.moodScore);
+    setReaction(result.mealQuality);
+    setReactionKey((k) => k + 1);
+    setCoins((c) => c + result.coinsAwarded);
   }
 
   async function handleResendVerification() {
@@ -73,6 +116,7 @@ function DashboardPage() {
       <header className="dashboard-header">
         <h1>CalCoach</h1>
         <div className="dashboard-user">
+          <span className="coin-badge">🪙 {coins}</span>
           <span>{user?.name}</span>
           <button className="logout-btn" onClick={logout}>
             Log out
@@ -80,6 +124,9 @@ function DashboardPage() {
         </div>
       </header>
 
+      {loginBonusNotice !== null && (
+        <div className="banner banner-success">Welcome back! +{loginBonusNotice} coins daily login bonus.</div>
+      )}
       {verifiedNotice === 'success' && (
         <div className="banner banner-success">Email verified — thanks!</div>
       )}
@@ -106,7 +153,14 @@ function DashboardPage() {
       )}
 
       <section className="pet-hero">
-        <PetDisplay mood={mood} moodScore={moodScore} celebrateKey={celebrateKey} />
+        <PetDisplay
+          mood={mood}
+          moodScore={moodScore}
+          reaction={reaction}
+          reactionKey={reactionKey}
+          background={equippedBackground}
+          furniture={equippedFurniture}
+        />
       </section>
 
       <nav className="dashboard-tabs">
@@ -124,6 +178,13 @@ function DashboardPage() {
         >
           Progress
         </button>
+        <button
+          type="button"
+          className={`tab-btn ${activeTab === 'shop' ? 'active' : ''}`}
+          onClick={() => setActiveTab('shop')}
+        >
+          Shop
+        </button>
       </nav>
 
       {activeTab === 'log' && (
@@ -138,6 +199,21 @@ function DashboardPage() {
         <main className="dashboard-grid dashboard-grid-single">
           <section className="dashboard-card">
             <ProgressTab userId={user!._id} calorieGoal={user?.dailyCalorieGoal} />
+          </section>
+        </main>
+      )}
+
+      {activeTab === 'shop' && (
+        <main className="dashboard-grid dashboard-grid-single">
+          <section className="dashboard-card">
+            <ShopTab
+              userId={user!._id}
+              onStateChange={(state) => {
+                setCoins(state.coins);
+                setEquippedBackground(state.equippedBackground);
+                setEquippedFurniture(state.equippedFurniture);
+              }}
+            />
           </section>
         </main>
       )}

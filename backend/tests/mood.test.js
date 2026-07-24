@@ -1,4 +1,4 @@
-const { calculateMood } = require('../utils/mood');
+const { calculateMood, calculateMealQuality } = require('../utils/mood');
 
 describe('calculateMood', () => {
   it('stays neutral with no calories logged', () => {
@@ -63,5 +63,34 @@ describe('calculateMood', () => {
       { dailyCalorieGoal: 2000, dailyProteinGoal: 100 }
     );
     expect(noProtein.moodScore).toBeLessThan(balanced.moodScore);
+  });
+});
+
+describe('calculateMealQuality', () => {
+  const goals = { dailyCalorieGoal: 2000, dailyProteinGoal: 100 };
+
+  it('is neutral for a meal with no calories', () => {
+    expect(calculateMealQuality({ calories: 0, protein: 0, carbs: 0, fat: 0 }, goals)).toBe('neutral');
+  });
+
+  it('is good for a reasonably sized, balanced meal', () => {
+    const quality = calculateMealQuality({ calories: 600, protein: 30, carbs: 60, fat: 20 }, goals);
+    expect(quality).toBe('good');
+  });
+
+  it('is bad for a calorie-and-fat-heavy single meal', () => {
+    const quality = calculateMealQuality({ calories: 1800, protein: 10, carbs: 20, fat: 150 }, goals);
+    expect(quality).toBe('bad');
+  });
+
+  it('is neutral for a meal thats oversized but otherwise on track', () => {
+    const quality = calculateMealQuality({ calories: 1400, protein: 35, carbs: 75, fat: 19 }, goals);
+    expect(quality).toBe('neutral');
+  });
+
+  it('tolerates normal meal-to-meal size variation without calling it bad', () => {
+    // a bigger dinner than breakfast is normal, not "bad"
+    const quality = calculateMealQuality({ calories: 900, protein: 45, carbs: 90, fat: 25 }, goals);
+    expect(quality).not.toBe('bad');
   });
 });

@@ -4,9 +4,16 @@ const router = express.Router();
 const FoodLog = require('../models/FoodLog');
 const PetState = require('../models/PetState');
 const User = require('../models/User');
-const { calculateMood } = require('../utils/mood');
+const { calculateMood, calculateMealQuality } = require('../utils/mood');
 
-// POST /api/foodlog - log a meal and update pet mood
+const COINS_PER_MEAL = 5;
+const THREE_MEALS_BONUS = 25;
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// POST /api/foodlog - log a meal, update pet mood, and award coins
 router.post('/', async (req, res) => {
   try {
     const { userId, foodName, calories, protein, carbs, fat } = req.body;
@@ -34,15 +41,42 @@ router.post('/', async (req, res) => {
     );
 
     const user = await User.findById(userId);
-    const { mood, moodScore } = calculateMood(totals, user || {});
+    const goals = user || {};
+    const { mood, moodScore } = calculateMood(totals, goals);
+    const mealQuality = calculateMealQuality({ calories, protein, carbs, fat }, goals);
+
+    const existingPetState = await PetState.findOne({ userId });
+    const today = todayKey();
+
+    let coinsAwarded = COINS_PER_MEAL;
+    let mealBonusAwarded = false;
+    if (todaysLogs.length === 3 && existingPetState?.lastMealBonusDate !== today) {
+      coinsAwarded += THREE_MEALS_BONUS;
+      mealBonusAwarded = true;
+    }
 
     const petState = await PetState.findOneAndUpdate(
       { userId },
-      { mood, moodScore, lastFedAt: new Date() },
+      {
+        $set: {
+          mood,
+          moodScore,
+          lastFedAt: new Date(),
+          ...(mealBonusAwarded ? { lastMealBonusDate: today } : {}),
+        },
+        $inc: { coins: coinsAwarded },
+      },
       { upsert: true, new: true }
     );
 
-    res.status(200).json({ log: newLog, petState, error: '' });
+    res.status(200).json({
+      log: newLog,
+      petState,
+      mealQuality,
+      coinsAwarded,
+      mealBonusAwarded,
+      error: '',
+    });
   } catch (err) {
     res.status(500).json({ error: err.toString() });
   }

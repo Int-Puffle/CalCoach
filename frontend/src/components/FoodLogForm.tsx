@@ -1,9 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { API_BASE } from '../config';
 
+export type LogSuccessResult = {
+  mood: string;
+  moodScore: number;
+  coinsAwarded: number;
+  mealBonusAwarded: boolean;
+  mealQuality: 'good' | 'neutral' | 'bad';
+};
+
 type FoodLogFormProps = {
   userId: string;
-  onLogSuccess: (mood: string, moodScore: number) => void;
+  onLogSuccess: (result: LogSuccessResult) => void;
 };
 
 type SearchResult = {
@@ -114,7 +122,13 @@ function FoodLogForm({ userId, onLogSuccess }: FoodLogFormProps) {
         setMessage('Error: ' + res.error);
       } else {
         setMessage('Logged!');
-        onLogSuccess(res.petState.mood, res.petState.moodScore);
+        onLogSuccess({
+          mood: res.petState.mood,
+          moodScore: res.petState.moodScore,
+          coinsAwarded: res.coinsAwarded,
+          mealBonusAwarded: res.mealBonusAwarded,
+          mealQuality: res.mealQuality,
+        });
         setFoodName('');
         setCalories('');
         setProtein('');

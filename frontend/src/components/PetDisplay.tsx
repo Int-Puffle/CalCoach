@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import PetCreature from './PetCreature';
+import PetScene from './PetScene';
 
 type PetDisplayProps = {
   mood: string;
   moodScore: number;
-  celebrateKey?: number;
+  reaction?: 'good' | 'neutral' | 'bad' | null;
+  reactionKey?: number;
+  background?: string;
+  furniture?: string[];
 };
 
 const moodLabels: Record<string, string> = {
@@ -14,21 +17,19 @@ const moodLabels: Record<string, string> = {
   sick: 'Not feeling great',
 };
 
-function PetDisplay({ mood, moodScore, celebrateKey }: PetDisplayProps) {
-  const [celebrating, setCelebrating] = useState(false);
+function PetDisplay({ mood, moodScore, reaction, reactionKey, background = 'meadow', furniture = [] }: PetDisplayProps) {
+  const [activeReaction, setActiveReaction] = useState<'good' | 'neutral' | 'bad' | null>(null);
 
   useEffect(() => {
-    if (!celebrateKey) return;
-    setCelebrating(true);
-    const timeout = setTimeout(() => setCelebrating(false), 1100);
+    if (!reactionKey || !reaction) return;
+    setActiveReaction(reaction);
+    const timeout = setTimeout(() => setActiveReaction(null), 1100);
     return () => clearTimeout(timeout);
-  }, [celebrateKey]);
+  }, [reactionKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="pet-display">
-      <div className="pet-creature-stage">
-        <PetCreature mood={mood} celebrating={celebrating} />
-      </div>
+      <PetScene mood={mood} reaction={activeReaction} background={background} furniture={furniture} />
       <p className="pet-mood-label">{moodLabels[mood] || 'Doing okay'}</p>
       <div className="mood-bar-track">
         <div className="mood-bar-fill" style={{ width: `${Math.min(Math.max(moodScore, 0), 100)}%` }} />

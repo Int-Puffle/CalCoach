@@ -50,4 +50,40 @@ function calculateMood(totals, goals = {}) {
   return { mood, moodScore };
 }
 
-module.exports = { calculateMood };
+// Per-meal scoring is deliberately looser than the daily scoreMacro band
+// (0.4x-1.6x of a meal's 1/3-of-daily share counts as "on track") since one
+// meal legitimately varies in size a lot more than a full day's total does.
+function scoreMealMacro(actual, perMealGoal) {
+  if (!perMealGoal || perMealGoal <= 0) return 50;
+  const ratio = actual / perMealGoal;
+  if (ratio >= 0.4 && ratio <= 1.6) return 100;
+  const distance = ratio < 0.4 ? 0.4 - ratio : ratio - 1.6;
+  return Math.max(0, Math.round(100 - (distance / 0.6) * 100));
+}
+
+// Judges a single logged meal in isolation (not the day's cumulative total),
+// for the instant reaction animation right after logging. Weighs calories and
+// fat most heavily since those are the two macros a single "bad" meal is
+// usually driven by.
+function calculateMealQuality(meal, goals = {}) {
+  const calories = meal.calories || 0;
+  if (calories <= 0) return 'neutral';
+
+  const calorieGoal = goals.dailyCalorieGoal || 2000;
+  const proteinGoal = goals.dailyProteinGoal || 100;
+  const carbsGoal = Math.round((calorieGoal * CARBS_SHARE_OF_CALORIES) / CARB_KCAL_PER_G);
+  const fatGoal = Math.round((calorieGoal * FAT_SHARE_OF_CALORIES) / FAT_KCAL_PER_G);
+
+  const calorieScore = scoreMealMacro(calories, calorieGoal / 3);
+  const proteinScore = scoreMealMacro(meal.protein || 0, proteinGoal / 3);
+  const carbsScore = scoreMealMacro(meal.carbs || 0, carbsGoal / 3);
+  const fatScore = scoreMealMacro(meal.fat || 0, fatGoal / 3);
+
+  const score = calorieScore * 0.5 + proteinScore * 0.15 + carbsScore * 0.1 + fatScore * 0.25;
+
+  if (score >= 65) return 'good';
+  if (score <= 30) return 'bad';
+  return 'neutral';
+}
+
+module.exports = { calculateMood, calculateMealQuality };

@@ -5,6 +5,7 @@ const passport = require('./config/passport');
 const foodLogRoutes = require('./routes/foodLog');
 const foodSearchRoutes = require('./routes/foodSearch');
 const authRoutes = require('./routes/auth');
+const shopRoutes = require('./routes/shop');
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -35,6 +36,7 @@ app.use(passport.session());
 app.use('/api/foodlog', foodLogRoutes);
 app.use('/api/foodsearch', foodSearchRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/shop', shopRoutes);
 
 app.get('/', (req, res) => {
   res.send('CalCoach API is running');
