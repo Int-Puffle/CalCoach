@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { API_BASE } from '../config';
 
 type FoodLogFormProps = {
@@ -16,6 +16,9 @@ type SearchResult = {
   basis: string;
 };
 
+const SEARCH_DEBOUNCE_MS = 350;
+const MIN_QUERY_LENGTH = 2;
+
 function FoodLogForm({ userId, onLogSuccess }: FoodLogFormProps) {
   const [foodName, setFoodName] = useState('');
   const [calories, setCalories] = useState('');
@@ -30,31 +33,49 @@ function FoodLogForm({ userId, onLogSuccess }: FoodLogFormProps) {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
 
-  async function handleSearch() {
+  // Live search as the user types, debounced so we're not firing a
+  // request on every keystroke, with stale responses discarded.
+  useEffect(() => {
     const q = query.trim();
-    if (!q) return;
-
-    setSearching(true);
-    setSearchError('');
-    setResults([]);
-
-    try {
-      const response = await fetch(`${API_BASE}/api/foodsearch?q=${encodeURIComponent(q)}`);
-      const data = await response.json();
-
-      if (data.error) {
-        setSearchError(data.error);
-      } else if (data.results.length === 0) {
-        setSearchError('No matches found. Try a different search term.');
-      } else {
-        setResults(data.results);
-      }
-    } catch (err) {
-      setSearchError('Error: ' + String(err));
-    } finally {
+    if (q.length < MIN_QUERY_LENGTH) {
+      setResults([]);
+      setSearchError('');
       setSearching(false);
+      return;
     }
-  }
+
+    const controller = new AbortController();
+    setSearching(true);
+
+    const debounce = setTimeout(() => {
+      fetch(`${API_BASE}/api/foodsearch?q=${encodeURIComponent(q)}`, { signal: controller.signal })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            setSearchError(data.error);
+            setResults([]);
+          } else if (data.results.length === 0) {
+            setSearchError('No matches found. Try a different search term.');
+            setResults([]);
+          } else {
+            setSearchError('');
+            setResults(data.results);
+          }
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            setSearchError('Error: ' + String(err));
+            setResults([]);
+          }
+        })
+        .finally(() => setSearching(false));
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(debounce);
+      controller.abort();
+    };
+  }, [query]);
 
   function applyResult(result: SearchResult) {
     setFoodName(result.name);
@@ -112,33 +133,19 @@ function FoodLogForm({ userId, onLogSuccess }: FoodLogFormProps) {
       <h2>Log a Meal</h2>
 
       <div className="food-search">
-        <div className="field-row">
-          <label className="field">
-            <span>Search a food or brand</span>
-            <input
-              type="text"
-              placeholder="e.g. Cheerios"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSearch();
-                }
-              }}
-            />
-          </label>
-          <button
-            type="button"
-            className="secondary-btn"
-            onClick={handleSearch}
-            disabled={searching || !query.trim()}
-          >
-            {searching ? 'Searching...' : 'Search'}
-          </button>
-        </div>
+        <label className="field">
+          <span>Search a food or brand</span>
+          <input
+            type="text"
+            placeholder="e.g. Cheerios"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoComplete="off"
+          />
+        </label>
 
-        {searchError && <p className="form-message error">{searchError}</p>}
+        {searching && <p className="search-status">Searching...</p>}
+        {!searching && searchError && <p className="form-message error">{searchError}</p>}
 
         {results.length > 0 && (
           <ul className="search-results">

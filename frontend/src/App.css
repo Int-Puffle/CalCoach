@@ -419,8 +419,10 @@
   border-bottom: 1px solid var(--border);
 }
 
-.food-search .field-row {
-  align-items: flex-end;
+.search-status {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text);
 }
 
 .secondary-btn {
