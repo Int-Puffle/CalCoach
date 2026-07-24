@@ -30,11 +30,13 @@ function PetDisplay({ mood, moodScore, reaction, reactionKey, background = 'mead
   return (
     <div className="pet-display">
       <PetScene mood={mood} reaction={activeReaction} background={background} furniture={furniture} />
-      <p className="pet-mood-label">{moodLabels[mood] || 'Doing okay'}</p>
-      <div className="mood-bar-track">
-        <div className="mood-bar-fill" style={{ width: `${Math.min(Math.max(moodScore, 0), 100)}%` }} />
+      <div className="pet-info">
+        <p className="pet-mood-label">{moodLabels[mood] || 'Doing okay'}</p>
+        <div className="mood-bar-track">
+          <div className="mood-bar-fill" style={{ width: `${Math.min(Math.max(moodScore, 0), 100)}%` }} />
+        </div>
+        <p className="mood-score-label">Mood Score: {moodScore}</p>
       </div>
-      <p className="mood-score-label">Mood Score: {moodScore}</p>
     </div>
   );
 }

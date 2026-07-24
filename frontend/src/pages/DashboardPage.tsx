@@ -16,6 +16,7 @@ function DashboardPage() {
   const [reaction, setReaction] = useState<'good' | 'neutral' | 'bad' | null>(null);
   const [reactionKey, setReactionKey] = useState(0);
   const [coins, setCoins] = useState(0);
+  const [petName, setPetName] = useState('Binky');
   const [equippedBackground, setEquippedBackground] = useState('meadow');
   const [equippedFurniture, setEquippedFurniture] = useState<string[]>([]);
   const [loginBonusNotice, setLoginBonusNotice] = useState<number | null>(null);
@@ -47,6 +48,7 @@ function DashboardPage() {
         if (data.petState) {
           setMood(data.petState.mood);
           setMoodScore(data.petState.moodScore);
+          setPetName(data.petState.petName || 'Binky');
         }
       })
       .catch(() => {});
@@ -151,6 +153,10 @@ function DashboardPage() {
           </button>
         </div>
       )}
+
+      <div className="pet-nameplate-wrap">
+        <span className="pet-nameplate">🐾 {petName}</span>
+      </div>
 
       <section className="pet-hero">
         <PetDisplay

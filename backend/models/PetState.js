@@ -13,6 +13,7 @@ const petStateSchema = new mongoose.Schema({
   ownedItems: { type: [String], default: [] },
   equippedBackground: { type: String, default: 'meadow' },
   equippedFurniture: { type: [String], default: [] },
+  petName: { type: String, default: 'Binky' },
 });
 
 module.exports = mongoose.model('PetState', petStateSchema);

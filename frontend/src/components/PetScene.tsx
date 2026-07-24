@@ -13,7 +13,7 @@ function PetScene({ mood, reaction, background, furniture }: PetSceneProps) {
 
   return (
     <div className="pet-scene">
-      <svg viewBox="0 0 200 220" className="pet-scene-background" aria-hidden="true">
+      <svg viewBox="0 0 200 220" preserveAspectRatio="xMidYMid slice" className="pet-scene-background" aria-hidden="true">
         {bg.render()}
       </svg>
       <svg viewBox="0 0 200 220" className="pet-scene-furniture" aria-hidden="true">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import { BACKGROUNDS, FURNITURE } from './PetSceneAssets';
+import { useAuth } from '../context/AuthContext';
 
 type ShopTabProps = {
   userId: string;
@@ -39,11 +40,13 @@ function ItemPreview({ id, type }: { id: string; type: 'background' | 'furniture
 }
 
 function ShopTab({ userId, onStateChange }: ShopTabProps) {
+  const { refreshUser } = useAuth();
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [state, setState] = useState<ShopState | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -113,6 +116,34 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
     }
   }
 
+  async function handleReset() {
+    const confirmed = window.confirm(
+      'This permanently deletes all your food logs, coins, purchases, and pet progress, and starts you over with a brand-new pet. This cannot be undone. Continue?'
+    );
+    if (!confirmed) return;
+
+    setResetting(true);
+    setError('');
+    try {
+      const response = await fetch(`${API_BASE}/api/account/reset`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error);
+        setResetting(false);
+        return;
+      }
+      await refreshUser();
+    } catch (err) {
+      setError(String(err));
+      setResetting(false);
+    }
+  }
+
   if (loading) return <p className="progress-empty">Loading the shop...</p>;
   if (!state) return <p className="form-message error">{error || 'Could not load the shop.'}</p>;
 
@@ -173,6 +204,17 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
 
       <h3 className="shop-section-title">Furniture</h3>
       <ul className="shop-grid">{furniture.map(renderItem)}</ul>
+
+      <div className="danger-zone">
+        <h3 className="shop-section-title">Danger zone</h3>
+        <p className="danger-zone-copy">
+          Want to start over with a different CalCoach pet? This wipes all your food logs, coins, purchases, and
+          personalization data.
+        </p>
+        <button type="button" className="danger-btn" onClick={handleReset} disabled={resetting}>
+          {resetting ? 'Resetting...' : 'Reset my pet'}
+        </button>
+      </div>
     </div>
   );
 }

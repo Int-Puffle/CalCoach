@@ -5,6 +5,7 @@ import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const OnboardingFlow = lazy(() => import('./components/OnboardingFlow'));
 
 function App() {
   const { user, loading } = useAuth();
@@ -21,7 +22,7 @@ function App() {
         element={
           user ? (
             <Suspense fallback={<div className="app-loading">Loading CalCoach...</div>}>
-              <DashboardPage />
+              {user.onboardingCompleted ? <DashboardPage /> : <OnboardingFlow />}
             </Suspense>
           ) : (
             <Navigate to="/" replace />
