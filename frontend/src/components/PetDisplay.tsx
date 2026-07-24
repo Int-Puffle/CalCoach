@@ -1,13 +1,10 @@
+import { useEffect, useState } from 'react';
+import PetCreature from './PetCreature';
+
 type PetDisplayProps = {
   mood: string;
   moodScore: number;
-};
-
-const emojiMap: Record<string, string> = {
-  happy: '😊',
-  neutral: '😐',
-  sad: '😢',
-  sick: '🤢',
+  celebrateKey?: number;
 };
 
 const moodLabels: Record<string, string> = {
@@ -17,11 +14,20 @@ const moodLabels: Record<string, string> = {
   sick: 'Not feeling great',
 };
 
-function PetDisplay({ mood, moodScore }: PetDisplayProps) {
+function PetDisplay({ mood, moodScore, celebrateKey }: PetDisplayProps) {
+  const [celebrating, setCelebrating] = useState(false);
+
+  useEffect(() => {
+    if (!celebrateKey) return;
+    setCelebrating(true);
+    const timeout = setTimeout(() => setCelebrating(false), 1100);
+    return () => clearTimeout(timeout);
+  }, [celebrateKey]);
+
   return (
     <div className="pet-display">
-      <div className="pet-emoji" aria-hidden="true">
-        {emojiMap[mood] || '😐'}
+      <div className="pet-creature-stage">
+        <PetCreature mood={mood} celebrating={celebrating} />
       </div>
       <p className="pet-mood-label">{moodLabels[mood] || 'Doing okay'}</p>
       <div className="mood-bar-track">

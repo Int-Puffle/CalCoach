@@ -166,7 +166,23 @@
   padding: 28px;
 }
 
-/* Pet display */
+/* Pet hero */
+.pet-hero {
+  max-width: 1024px;
+  width: calc(100% - 64px);
+  margin: 24px auto 0;
+  padding: 32px 24px 24px;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at top, var(--accent-bg), transparent 65%), var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+
+  @media (max-width: 720px) {
+    width: calc(100% - 40px);
+    padding: 24px 16px 20px;
+  }
+}
+
 .pet-display {
   display: flex;
   flex-direction: column;
@@ -175,13 +191,21 @@
   gap: 8px;
 }
 
-.pet-emoji {
-  font-size: 80px;
-  line-height: 1;
+.pet-creature-stage {
+  width: 100%;
+  max-width: 240px;
+  margin: 0 0 8px;
+}
+
+.pet-creature {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
 }
 
 .pet-mood-label {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 500;
   color: var(--text-h);
   margin-bottom: 8px;
@@ -189,6 +213,7 @@
 
 .mood-bar-track {
   width: 100%;
+  max-width: 320px;
   height: 10px;
   border-radius: 999px;
   background: var(--accent-bg);
@@ -205,6 +230,186 @@
 .mood-score-label {
   font-size: 14px;
   margin-top: 4px;
+}
+
+/* Pet creature animation */
+.pet-body,
+.pet-arm,
+.pet-leg,
+.pet-eyelid,
+.pet-sparkle,
+.pet-nausea-line,
+.pet-tear {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.pet-arm {
+  transform-origin: 50% 0%;
+}
+
+.pet-body-wrap {
+  animation: pet-idle-bob 3.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.pet-shadow {
+  fill: rgba(0, 0, 0, 0.16);
+  animation: pet-shadow-pulse 3.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes pet-idle-bob {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  45% { transform: translateY(-8px) scale(1.02, 0.98); }
+  55% { transform: translateY(-8px) scale(1.02, 0.98); }
+}
+
+@keyframes pet-shadow-pulse {
+  0%, 100% { transform: scale(1, 1); opacity: 1; }
+  50% { transform: scale(0.88, 0.88); opacity: 0.7; }
+}
+
+.pet-eyelid {
+  animation: pet-blink 5s ease-in-out infinite;
+  transform: scaleY(0);
+}
+
+.pet-eyelid:nth-of-type(2) {
+  animation-delay: 0.04s;
+}
+
+@keyframes pet-blink {
+  0%, 92%, 100% { transform: scaleY(0); }
+  94%, 97% { transform: scaleY(1); }
+}
+
+.pet-arm-left { transform: rotate(6deg); }
+.pet-arm-right { transform: rotate(-6deg); }
+
+.mood-happy .pet-body-wrap {
+  animation: pet-happy-bounce 1.1s ease-in-out infinite;
+}
+
+.mood-happy .pet-arm-left {
+  animation: pet-wave-left 1.1s ease-in-out infinite;
+}
+
+.mood-happy .pet-arm-right {
+  animation: pet-wave-right 1.1s ease-in-out infinite;
+}
+
+@keyframes pet-happy-bounce {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  40% { transform: translateY(-16px) scale(1.04, 0.94); }
+  55% { transform: translateY(-16px) scale(1.04, 0.94); }
+  75% { transform: translateY(0) scale(0.97, 1.04); }
+}
+
+@keyframes pet-wave-left {
+  0%, 100% { transform: rotate(-130deg); }
+  50% { transform: rotate(-150deg); }
+}
+
+@keyframes pet-wave-right {
+  0%, 100% { transform: rotate(130deg); }
+  50% { transform: rotate(150deg); }
+}
+
+.mood-sad .pet-body-wrap {
+  animation: pet-sad-sway 4s ease-in-out infinite;
+}
+
+.mood-sad .pet-arm-left { transform: rotate(18deg); }
+.mood-sad .pet-arm-right { transform: rotate(-18deg); }
+
+@keyframes pet-sad-sway {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(-1.5deg); }
+}
+
+.pet-tear {
+  animation: pet-tear-fall 2.2s ease-in infinite;
+  opacity: 0;
+}
+
+@keyframes pet-tear-fall {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 0.9; }
+  70% { transform: translateY(22px); opacity: 0.9; }
+  85% { opacity: 0; }
+  100% { transform: translateY(22px); opacity: 0; }
+}
+
+.mood-sick .pet-body-wrap {
+  animation: pet-sick-shake 0.4s linear infinite;
+}
+
+@keyframes pet-sick-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2.5px) rotate(-0.8deg); }
+  75% { transform: translateX(2.5px) rotate(0.8deg); }
+}
+
+.pet-nausea-line {
+  opacity: 0;
+  animation: pet-nausea-rise 2.4s ease-out infinite;
+}
+
+.pet-nausea-2 {
+  animation-delay: 0.9s;
+}
+
+@keyframes pet-nausea-rise {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.4; }
+  100% { transform: translateY(-18px); opacity: 0; }
+}
+
+.pet-sparkle {
+  animation: pet-sparkle-twinkle 1.6s ease-in-out infinite;
+  transform: scale(0.6);
+  opacity: 0;
+}
+
+.pet-sparkle-2 { animation-delay: 0.4s; }
+.pet-sparkle-3 { animation-delay: 0.9s; }
+
+@keyframes pet-sparkle-twinkle {
+  0%, 100% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.is-celebrating .pet-body-wrap {
+  animation: pet-celebrate-pop 0.9s ease-in-out;
+}
+
+@keyframes pet-celebrate-pop {
+  0% { transform: translateY(0) scale(1, 1); }
+  25% { transform: translateY(-28px) scale(1.08, 0.9); }
+  45% { transform: translateY(2px) scale(0.94, 1.08); }
+  65% { transform: translateY(-14px) scale(1.04, 0.96); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-body-wrap,
+  .pet-shadow,
+  .pet-eyelid,
+  .pet-arm-left,
+  .pet-arm-right,
+  .pet-tear,
+  .pet-nausea-line,
+  .pet-sparkle {
+    animation: none !important;
+  }
+
+  .pet-eyelid {
+    transform: scaleY(0) !important;
+  }
 }
 
 /* Food search */

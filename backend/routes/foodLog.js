@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const FoodLog = require('../models/FoodLog');
 const PetState = require('../models/PetState');
-const { calculateMoodFromCalories } = require('../utils/mood');
+const User = require('../models/User');
+const { calculateMood } = require('../utils/mood');
 
 // POST /api/foodlog - log a meal and update pet mood
 router.post('/', async (req, res) => {
@@ -17,13 +18,23 @@ router.post('/', async (req, res) => {
     const newLog = new FoodLog({ userId, foodName, calories, protein, carbs, fat });
     await newLog.save();
 
-    // recalculate pet mood based on today's totals
+    // recalculate pet mood based on today's totals across all macros
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
     const todaysLogs = await FoodLog.find({ userId, loggedAt: { $gte: todayStart } });
-    const totalCalories = todaysLogs.reduce((sum, log) => sum + log.calories, 0);
-    const { mood, moodScore } = calculateMoodFromCalories(totalCalories);
+    const totals = todaysLogs.reduce(
+      (acc, log) => ({
+        calories: acc.calories + log.calories,
+        protein: acc.protein + (log.protein || 0),
+        carbs: acc.carbs + (log.carbs || 0),
+        fat: acc.fat + (log.fat || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+
+    const user = await User.findById(userId);
+    const { mood, moodScore } = calculateMood(totals, user || {});
 
     const petState = await PetState.findOneAndUpdate(
       { userId },
@@ -56,22 +67,25 @@ router.get('/stats/:userId', async (req, res) => {
     rangeStart.setHours(0, 0, 0, 0);
     rangeStart.setDate(rangeStart.getDate() - (days - 1));
 
-    const dailyTotals = await FoodLog.aggregate([
-      {
-        $match: {
-          userId: new mongoose.Types.ObjectId(req.params.userId),
-          loggedAt: { $gte: rangeStart },
+    const [dailyTotals, user] = await Promise.all([
+      FoodLog.aggregate([
+        {
+          $match: {
+            userId: new mongoose.Types.ObjectId(req.params.userId),
+            loggedAt: { $gte: rangeStart },
+          },
         },
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$loggedAt' } },
-          calories: { $sum: '$calories' },
-          protein: { $sum: '$protein' },
-          carbs: { $sum: '$carbs' },
-          fat: { $sum: '$fat' },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$loggedAt' } },
+            calories: { $sum: '$calories' },
+            protein: { $sum: '$protein' },
+            carbs: { $sum: '$carbs' },
+            fat: { $sum: '$fat' },
+          },
         },
-      },
+      ]),
+      User.findById(req.params.userId),
     ]);
 
     const byDate = new Map(dailyTotals.map((entry) => [entry._id, entry]));
@@ -82,18 +96,15 @@ router.get('/stats/:userId', async (req, res) => {
       day.setDate(day.getDate() + i);
       const dateKey = day.toISOString().slice(0, 10);
       const entry = byDate.get(dateKey);
-      const calories = entry?.calories || 0;
-      const { mood, moodScore } = calculateMoodFromCalories(calories);
-
-      history.push({
-        date: dateKey,
-        calories,
+      const totals = {
+        calories: entry?.calories || 0,
         protein: entry?.protein || 0,
         carbs: entry?.carbs || 0,
         fat: entry?.fat || 0,
-        mood,
-        moodScore,
-      });
+      };
+      const { mood, moodScore } = calculateMood(totals, user || {});
+
+      history.push({ date: dateKey, ...totals, mood, moodScore });
     }
 
     res.status(200).json({ history, error: '' });

@@ -12,6 +12,7 @@ function DashboardPage() {
   const { user, logout } = useAuth();
   const [mood, setMood] = useState('neutral');
   const [moodScore, setMoodScore] = useState(50);
+  const [celebrateKey, setCelebrateKey] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>('log');
   const [searchParams, setSearchParams] = useSearchParams();
   const [verifiedNotice, setVerifiedNotice] = useState<'success' | 'failed' | null>(null);
@@ -31,9 +32,25 @@ function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Load the pet's actual saved state so it doesn't reset to a default
+  // mood every time the dashboard mounts (e.g. on a fresh login).
+  useEffect(() => {
+    fetch(`${API_BASE}/api/foodlog/petstate/${user!._id}`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.petState) {
+          setMood(data.petState.mood);
+          setMoodScore(data.petState.moodScore);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleLogSuccess(newMood: string, newMoodScore: number) {
     setMood(newMood);
     setMoodScore(newMoodScore);
+    setCelebrateKey((k) => k + 1);
   }
 
   async function handleResendVerification() {
@@ -88,6 +105,10 @@ function DashboardPage() {
         </div>
       )}
 
+      <section className="pet-hero">
+        <PetDisplay mood={mood} moodScore={moodScore} celebrateKey={celebrateKey} />
+      </section>
+
       <nav className="dashboard-tabs">
         <button
           type="button"
@@ -106,10 +127,7 @@ function DashboardPage() {
       </nav>
 
       {activeTab === 'log' && (
-        <main className="dashboard-grid">
-          <section className="dashboard-card">
-            <PetDisplay mood={mood} moodScore={moodScore} />
-          </section>
+        <main className="dashboard-grid dashboard-grid-single">
           <section className="dashboard-card">
             <FoodLogForm userId={user!._id} onLogSuccess={handleLogSuccess} />
           </section>

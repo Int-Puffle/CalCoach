@@ -2,6 +2,7 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../app');
 const FoodLog = require('../models/FoodLog');
+const User = require('../models/User');
 
 describe('POST /api/foodlog', () => {
   const userId = new mongoose.Types.ObjectId().toString();
@@ -12,28 +13,55 @@ describe('POST /api/foodlog', () => {
     expect(res.body.error).toMatch(/required/i);
   });
 
-  it('logs a meal and returns a happy pet state for a light day', async () => {
+  it('is happy when a balanced meal lands on the default goals', async () => {
     const res = await request(app)
       .post('/api/foodlog')
-      .send({ userId, foodName: 'Apple', calories: 95, protein: 0, carbs: 25, fat: 0 });
+      .send({ userId, foodName: 'Balanced meal', calories: 2000, protein: 100, carbs: 225, fat: 56 });
 
     expect(res.status).toBe(200);
-    expect(res.body.log.foodName).toBe('Apple');
+    expect(res.body.log.foodName).toBe('Balanced meal');
     expect(res.body.petState.mood).toBe('happy');
-    expect(res.body.petState.moodScore).toBe(80);
+    expect(res.body.petState.moodScore).toBeGreaterThanOrEqual(70);
   });
 
-  it('drops the pet mood to sad once daily calories exceed 2800', async () => {
+  it('is sad after badly under-eating for the day', async () => {
+    const underUserId = new mongoose.Types.ObjectId().toString();
+    const res = await request(app)
+      .post('/api/foodlog')
+      .send({ userId: underUserId, foodName: 'Small snack', calories: 150, protein: 5, carbs: 20, fat: 5 });
+
+    expect(res.body.petState.mood).toBe('sad');
+  });
+
+  it('turns sick from drastically overeating rather than just sad', async () => {
+    const overUserId = new mongoose.Types.ObjectId().toString();
     await request(app)
       .post('/api/foodlog')
-      .send({ userId, foodName: 'Feast', calories: 3000, protein: 0, carbs: 0, fat: 0 });
+      .send({ userId: overUserId, foodName: 'Feast', calories: 3000, protein: 150, carbs: 300, fat: 100 });
 
     const res = await request(app)
       .post('/api/foodlog')
-      .send({ userId, foodName: 'Dessert', calories: 200, protein: 0, carbs: 0, fat: 0 });
+      .send({ userId: overUserId, foodName: 'Dessert', calories: 1200, protein: 20, carbs: 150, fat: 60 });
 
-    expect(res.body.petState.mood).toBe('sad');
-    expect(res.body.petState.moodScore).toBe(30);
+    expect(res.body.petState.mood).toBe('sick');
+  });
+
+  it('scores against the logged-in user\'s own goals, not the defaults', async () => {
+    const goalUserId = new mongoose.Types.ObjectId();
+    await User.create({
+      _id: goalUserId,
+      googleId: 'goal-test-google-id',
+      name: 'Goal User',
+      email: 'goal-user@example.com',
+      dailyCalorieGoal: 1500,
+      dailyProteinGoal: 60,
+    });
+
+    const res = await request(app)
+      .post('/api/foodlog')
+      .send({ userId: goalUserId.toString(), foodName: 'Fitted meal', calories: 1500, protein: 60, carbs: 169, fat: 42 });
+
+    expect(res.body.petState.mood).toBe('happy');
   });
 });
 
@@ -86,8 +114,8 @@ describe('GET /api/foodlog/stats/:userId', () => {
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
     await FoodLog.create([
-      { userId, foodName: 'Breakfast', calories: 400, protein: 20, carbs: 40, fat: 10, loggedAt: today },
-      { userId, foodName: 'Lunch', calories: 600, protein: 30, carbs: 50, fat: 15, loggedAt: today },
+      { userId, foodName: 'Breakfast', calories: 800, protein: 40, carbs: 90, fat: 22, loggedAt: today },
+      { userId, foodName: 'Lunch', calories: 1200, protein: 60, carbs: 135, fat: 34, loggedAt: today },
       { userId, foodName: 'Old meal', calories: 300, protein: 10, carbs: 30, fat: 5, loggedAt: twoDaysAgo },
     ]);
 
@@ -96,8 +124,8 @@ describe('GET /api/foodlog/stats/:userId', () => {
     expect(res.body.history).toHaveLength(7);
 
     const todayEntry = res.body.history[6];
-    expect(todayEntry.calories).toBe(1000);
-    expect(todayEntry.protein).toBe(50);
+    expect(todayEntry.calories).toBe(2000);
+    expect(todayEntry.protein).toBe(100);
     expect(todayEntry.mood).toBe('happy');
 
     const oldMealEntry = res.body.history[4];
