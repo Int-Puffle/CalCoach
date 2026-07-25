@@ -1061,6 +1061,7 @@
 }
 
 .onboarding-pet .pet-creature {
+  position: static;
   width: 100%;
   height: auto;
   overflow: visible;
