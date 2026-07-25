@@ -3,6 +3,8 @@ const router = express.Router();
 const User = require('../models/User');
 const PetState = require('../models/PetState');
 const FoodLog = require('../models/FoodLog');
+const WaterLog = require('../models/WaterLog');
+const WeightLog = require('../models/WeightLog');
 
 // POST /api/account/reset - wipe a user's food logs and pet progress, and
 // send them back through onboarding to start over with a new pet
@@ -13,6 +15,8 @@ router.post('/reset', async (req, res) => {
 
     await Promise.all([
       FoodLog.deleteMany({ userId }),
+      WaterLog.deleteMany({ userId }),
+      WeightLog.deleteMany({ userId }),
       PetState.deleteOne({ userId }),
       User.findByIdAndUpdate(userId, {
         onboardingCompleted: false,
@@ -24,6 +28,8 @@ router.post('/reset', async (req, res) => {
         goal: null,
         dailyCalorieGoal: 2000,
         dailyProteinGoal: 100,
+        dailyWaterGoalCups: 8,
+        goalWeightKg: null,
       }),
     ]);
 

@@ -7,6 +7,7 @@ export type LogSuccessResult = {
   coinsAwarded: number;
   mealBonusAwarded: boolean;
   mealQuality: 'good' | 'neutral' | 'bad';
+  streakDays: number;
 };
 
 type FoodLogFormProps = {
@@ -128,6 +129,7 @@ function FoodLogForm({ userId, onLogSuccess }: FoodLogFormProps) {
           coinsAwarded: res.coinsAwarded,
           mealBonusAwarded: res.mealBonusAwarded,
           mealQuality: res.mealQuality,
+          streakDays: res.petState.streakDays,
         });
         setFoodName('');
         setCalories('');

@@ -8,6 +8,8 @@ const authRoutes = require('./routes/auth');
 const shopRoutes = require('./routes/shop');
 const onboardingRoutes = require('./routes/onboarding');
 const accountRoutes = require('./routes/account');
+const waterRoutes = require('./routes/water');
+const weightRoutes = require('./routes/weight');
 
 const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
@@ -41,6 +43,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/account', accountRoutes);
+app.use('/api/water', waterRoutes);
+app.use('/api/weight', weightRoutes);
 
 app.get('/', (req, res) => {
   res.send('CalCoach API is running');

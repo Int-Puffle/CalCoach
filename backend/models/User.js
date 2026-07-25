@@ -9,6 +9,8 @@ const userSchema = new mongoose.Schema({
   verificationTokenExpires: { type: Date },
   dailyCalorieGoal: { type: Number, default: 2000 },
   dailyProteinGoal: { type: Number, default: 100 },
+  dailyWaterGoalCups: { type: Number, default: 8 },
+  goalWeightKg: { type: Number, default: null },
   createdAt: { type: Date, default: Date.now },
 
   onboardingCompleted: { type: Boolean, default: false },

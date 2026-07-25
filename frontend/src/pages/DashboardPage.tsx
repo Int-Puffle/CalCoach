@@ -4,10 +4,19 @@ import FoodLogForm, { type LogSuccessResult } from '../components/FoodLogForm';
 import PetDisplay from '../components/PetDisplay';
 import ProgressTab from '../components/ProgressTab';
 import ShopTab from '../components/ShopTab';
+import TodaysMeals from '../components/TodaysMeals';
+import WaterTracker from '../components/WaterTracker';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../config';
 
 type Tab = 'log' | 'progress' | 'shop';
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 
 function DashboardPage() {
   const { user, logout } = useAuth();
@@ -17,6 +26,8 @@ function DashboardPage() {
   const [reactionKey, setReactionKey] = useState(0);
   const [coins, setCoins] = useState(0);
   const [petName, setPetName] = useState('Binky');
+  const [streakDays, setStreakDays] = useState(0);
+  const [mealsRefreshKey, setMealsRefreshKey] = useState(0);
   const [equippedBackground, setEquippedBackground] = useState('meadow');
   const [equippedFurniture, setEquippedFurniture] = useState<string[]>([]);
   const [loginBonusNotice, setLoginBonusNotice] = useState<number | null>(null);
@@ -49,6 +60,7 @@ function DashboardPage() {
           setMood(data.petState.mood);
           setMoodScore(data.petState.moodScore);
           setPetName(data.petState.petName || 'Binky');
+          setStreakDays(data.petState.streakDays || 0);
         }
       })
       .catch(() => {});
@@ -96,6 +108,8 @@ function DashboardPage() {
     setReaction(result.mealQuality);
     setReactionKey((k) => k + 1);
     setCoins((c) => c + result.coinsAwarded);
+    setMealsRefreshKey((k) => k + 1);
+    setStreakDays(result.streakDays);
   }
 
   async function handleResendVerification() {
@@ -113,13 +127,25 @@ function DashboardPage() {
     }
   }
 
+  const firstName = user?.name?.split(' ')[0] || 'there';
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
-        <h1>CalCoach</h1>
+        <div className="dashboard-greeting">
+          <p className="dashboard-wordmark">CalCoach</p>
+          <h1>
+            {getGreeting()}, {firstName}!
+          </h1>
+          <p className="dashboard-subtitle">Let's keep {petName} healthy today 🐾</p>
+        </div>
         <div className="dashboard-user">
+          {streakDays > 0 && (
+            <span className="streak-badge">
+              🔥 {streakDays} day{streakDays === 1 ? '' : 's'}
+            </span>
+          )}
           <span className="coin-badge">🪙 {coins}</span>
-          <span>{user?.name}</span>
           <button className="logout-btn" onClick={logout}>
             Log out
           </button>
@@ -153,10 +179,6 @@ function DashboardPage() {
           </button>
         </div>
       )}
-
-      <div className="pet-nameplate-wrap">
-        <span className="pet-nameplate">🐾 {petName}</span>
-      </div>
 
       <section className="pet-hero">
         <PetDisplay
@@ -195,6 +217,12 @@ function DashboardPage() {
 
       {activeTab === 'log' && (
         <main className="dashboard-grid dashboard-grid-single">
+          <section className="dashboard-card">
+            <TodaysMeals userId={user!._id} refreshKey={mealsRefreshKey} />
+          </section>
+          <section className="dashboard-card">
+            <WaterTracker userId={user!._id} />
+          </section>
           <section className="dashboard-card">
             <FoodLogForm userId={user!._id} onLogSuccess={handleLogSuccess} />
           </section>

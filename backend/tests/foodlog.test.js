@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const app = require('../app');
 const FoodLog = require('../models/FoodLog');
 const User = require('../models/User');
+const { todayKey } = require('../utils/date');
 
 describe('POST /api/foodlog', () => {
   const userId = new mongoose.Types.ObjectId().toString();
@@ -146,7 +147,7 @@ describe('GET /api/foodlog/stats/:userId', () => {
     expect(res.status).toBe(200);
     expect(res.body.history).toHaveLength(30);
     expect(res.body.history.every((day) => day.calories === 0 && day.mood === 'neutral')).toBe(true);
-    expect(res.body.history[29].date).toBe(new Date().toISOString().slice(0, 10));
+    expect(res.body.history[29].date).toBe(todayKey());
   });
 
   it('aggregates multiple logs on the same day and keeps days separate', async () => {

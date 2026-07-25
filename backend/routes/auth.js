@@ -21,6 +21,31 @@ router.get('/google/callback',
   }
 );
 
+// TEMPORARY DEV-ONLY BYPASS — logs in as a fake local user without going
+// through Google OAuth, for testing when GOOGLE_CLIENT_ID/SECRET aren't set
+// up yet. Disabled outside development. Remove once real OAuth is wired up.
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/dev-login', async (req, res) => {
+    try {
+      let user = await User.findOne({ googleId: 'dev-local-user' });
+      if (!user) {
+        user = await User.create({
+          googleId: 'dev-local-user',
+          name: 'Dev Tester',
+          email: 'dev-tester@example.com',
+          emailVerified: true,
+        });
+      }
+      req.login(user, (err) => {
+        if (err) return res.status(500).json({ error: 'Login failed' });
+        res.json({ user });
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.toString() });
+    }
+  });
+}
+
 // Check current logged-in user. Always 200 - this endpoint reports auth
 // status rather than gating access, so "not logged in" isn't an error.
 router.get('/me', (req, res) => {
