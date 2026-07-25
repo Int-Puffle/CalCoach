@@ -15,6 +15,13 @@ function ProgressTab({ userId, calorieGoal }: ProgressTabProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [weightHistory, setWeightHistory] = useState<ChartPoint[]>([]);
+  const [goalWeightKg, setGoalWeightKg] = useState<number | null>(null);
+  const [weightInput, setWeightInput] = useState('');
+  const [goalInput, setGoalInput] = useState('');
+  const [weightBusy, setWeightBusy] = useState(false);
+  const [weightMessage, setWeightMessage] = useState('');
+
   useEffect(() => {
     setLoading(true);
     setError('');
@@ -27,6 +34,76 @@ function ProgressTab({ userId, calorieGoal }: ProgressTabProps) {
       .catch((err) => setError(String(err)))
       .finally(() => setLoading(false));
   }, [userId, days]);
+
+  function loadWeight() {
+    return fetch(`${API_BASE}/api/weight/${userId}?days=${days}`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) return;
+        setWeightHistory(data.history || []);
+        setGoalWeightKg(data.goalWeightKg ?? null);
+      })
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    loadWeight();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, days]);
+
+  async function handleLogWeight(e: React.FormEvent) {
+    e.preventDefault();
+    if (!weightInput) return;
+    setWeightBusy(true);
+    setWeightMessage('');
+    try {
+      const response = await fetch(`${API_BASE}/api/weight`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, weightKg: Number(weightInput) }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        setWeightMessage('Error: ' + data.error);
+      } else {
+        setWeightMessage('Weight logged!');
+        setWeightInput('');
+        await loadWeight();
+      }
+    } catch (err) {
+      setWeightMessage('Error: ' + String(err));
+    } finally {
+      setWeightBusy(false);
+    }
+  }
+
+  async function handleSetGoal(e: React.FormEvent) {
+    e.preventDefault();
+    if (!goalInput) return;
+    setWeightBusy(true);
+    setWeightMessage('');
+    try {
+      const response = await fetch(`${API_BASE}/api/weight/goal`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, goalWeightKg: Number(goalInput) }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        setWeightMessage('Error: ' + data.error);
+      } else {
+        setGoalWeightKg(data.goalWeightKg);
+        setGoalInput('');
+        setWeightMessage('Goal weight updated!');
+      }
+    } catch (err) {
+      setWeightMessage('Error: ' + String(err));
+    } finally {
+      setWeightBusy(false);
+    }
+  }
 
   const hasAnyData = history.some((d) => Number(d.calories) > 0);
   const isInitialLoad = loading && history.length === 0;
@@ -78,6 +155,63 @@ function ProgressTab({ userId, calorieGoal }: ProgressTabProps) {
           />
         </div>
       )}
+
+      <div className="weight-section">
+        <h3>Weight</h3>
+        {weightHistory.length > 0 ? (
+          <TrendChart
+            title="Weight (kg)"
+            data={weightHistory}
+            series={[{ key: 'weightKg', label: 'Weight', color: 'var(--accent)' }]}
+            goal={goalWeightKg ? { value: goalWeightKg, label: `Goal: ${goalWeightKg} kg` } : undefined}
+            yFormat={(v) => v.toFixed(1)}
+          />
+        ) : (
+          <p className="progress-empty">No weigh-ins logged yet in this range.</p>
+        )}
+
+        <div className="weight-forms">
+          <form className="weight-form" onSubmit={handleLogWeight}>
+            <label className="field">
+              <span>Log today's weight (kg)</span>
+              <input
+                type="number"
+                placeholder="e.g. 78.5"
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
+                min={20}
+                max={300}
+                step={0.1}
+              />
+            </label>
+            <button className="secondary-btn" type="submit" disabled={weightBusy || !weightInput}>
+              Log weight
+            </button>
+          </form>
+
+          <form className="weight-form" onSubmit={handleSetGoal}>
+            <label className="field">
+              <span>{goalWeightKg ? `Goal weight: ${goalWeightKg} kg` : 'Set a goal weight (kg)'}</span>
+              <input
+                type="number"
+                placeholder="e.g. 72"
+                value={goalInput}
+                onChange={(e) => setGoalInput(e.target.value)}
+                min={20}
+                max={300}
+                step={0.1}
+              />
+            </label>
+            <button className="secondary-btn" type="submit" disabled={weightBusy || !goalInput}>
+              {goalWeightKg ? 'Update goal' : 'Set goal'}
+            </button>
+          </form>
+        </div>
+
+        {weightMessage && (
+          <p className={`form-message ${weightMessage.startsWith('Error') ? 'error' : 'success'}`}>{weightMessage}</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -2,12 +2,9 @@ const express = require('express');
 const router = express.Router();
 const PetState = require('../models/PetState');
 const { SHOP_ITEMS, SHOP_ITEMS_BY_ID } = require('../data/shopItems');
+const { todayKey } = require('../utils/date');
 
 const DAILY_LOGIN_BONUS = 15;
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 async function getOrCreatePetState(userId) {
   let petState = await PetState.findOne({ userId });

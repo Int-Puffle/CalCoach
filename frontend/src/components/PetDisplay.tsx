@@ -11,10 +11,10 @@ type PetDisplayProps = {
 };
 
 const moodLabels: Record<string, string> = {
-  happy: 'Happy',
+  happy: 'Happy 🎉',
   neutral: 'Doing okay',
-  sad: 'Feeling low',
-  sick: 'Not feeling great',
+  sad: 'Hungry',
+  sick: 'Overfed',
 };
 
 function PetDisplay({ mood, moodScore, reaction, reactionKey, background = 'meadow', furniture = [] }: PetDisplayProps) {

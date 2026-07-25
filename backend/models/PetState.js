@@ -6,6 +6,7 @@ const petStateSchema = new mongoose.Schema({
   moodScore: { type: Number, default: 50 },
   streakDays: { type: Number, default: 0 },
   lastFedAt: { type: Date, default: null },
+  lastStreakDate: { type: String, default: null },
 
   coins: { type: Number, default: 0 },
   lastLoginBonusDate: { type: String, default: null },

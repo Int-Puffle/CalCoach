@@ -1,16 +1,24 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const router = express.Router();
 const FoodLog = require('../models/FoodLog');
 const PetState = require('../models/PetState');
 const User = require('../models/User');
 const { calculateMood, calculateMealQuality } = require('../utils/mood');
+const { localDateKey, todayKey, yesterdayKey } = require('../utils/date');
 
 const COINS_PER_MEAL = 5;
 const THREE_MEALS_BONUS = 25;
 
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+// A new streak day is credited the first time a user logs food on a given
+// calendar day: +1 if they also logged yesterday (streak continues), reset
+// to 1 if there's a gap, unchanged if today was already credited.
+function nextStreak(existingPetState, today) {
+  const lastStreakDate = existingPetState?.lastStreakDate;
+  if (lastStreakDate === today) {
+    return { streakDays: existingPetState.streakDays, lastStreakDate };
+  }
+  const streakDays = lastStreakDate === yesterdayKey() ? (existingPetState?.streakDays || 0) + 1 : 1;
+  return { streakDays, lastStreakDate: today };
 }
 
 // POST /api/foodlog - log a meal, update pet mood, and award coins
@@ -55,6 +63,8 @@ router.post('/', async (req, res) => {
       mealBonusAwarded = true;
     }
 
+    const { streakDays, lastStreakDate } = nextStreak(existingPetState, today);
+
     const petState = await PetState.findOneAndUpdate(
       { userId },
       {
@@ -62,6 +72,8 @@ router.post('/', async (req, res) => {
           mood,
           moodScore,
           lastFedAt: new Date(),
+          streakDays,
+          lastStreakDate,
           ...(mealBonusAwarded ? { lastMealBonusDate: today } : {}),
         },
         $inc: { coins: coinsAwarded },
@@ -101,34 +113,33 @@ router.get('/stats/:userId', async (req, res) => {
     rangeStart.setHours(0, 0, 0, 0);
     rangeStart.setDate(rangeStart.getDate() - (days - 1));
 
-    const [dailyTotals, user] = await Promise.all([
-      FoodLog.aggregate([
-        {
-          $match: {
-            userId: new mongoose.Types.ObjectId(req.params.userId),
-            loggedAt: { $gte: rangeStart },
-          },
-        },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$loggedAt' } },
-            calories: { $sum: '$calories' },
-            protein: { $sum: '$protein' },
-            carbs: { $sum: '$carbs' },
-            fat: { $sum: '$fat' },
-          },
-        },
-      ]),
+    const [logs, user] = await Promise.all([
+      FoodLog.find({
+        userId: req.params.userId,
+        loggedAt: { $gte: rangeStart },
+      }),
       User.findById(req.params.userId),
     ]);
 
-    const byDate = new Map(dailyTotals.map((entry) => [entry._id, entry]));
+    // Bucket in JS by local calendar day rather than Mongo's $dateToString
+    // (which groups by UTC), so "today" here lines up with the local-time
+    // "today" used everywhere else (e.g. logging a meal, the streak).
+    const byDate = new Map();
+    for (const log of logs) {
+      const dateKey = localDateKey(log.loggedAt);
+      const entry = byDate.get(dateKey) || { calories: 0, protein: 0, carbs: 0, fat: 0 };
+      entry.calories += log.calories;
+      entry.protein += log.protein || 0;
+      entry.carbs += log.carbs || 0;
+      entry.fat += log.fat || 0;
+      byDate.set(dateKey, entry);
+    }
 
     const history = [];
     for (let i = 0; i < days; i++) {
       const day = new Date(rangeStart);
       day.setDate(day.getDate() + i);
-      const dateKey = day.toISOString().slice(0, 10);
+      const dateKey = localDateKey(day);
       const entry = byDate.get(dateKey);
       const totals = {
         calories: entry?.calories || 0,

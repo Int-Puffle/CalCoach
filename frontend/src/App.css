@@ -68,21 +68,61 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 32px;
+  gap: 16px;
+  padding: 24px 32px;
   border-bottom: 1px solid var(--border);
   background: var(--card-bg);
+  flex-wrap: wrap;
 
   @media (max-width: 640px) {
     padding: 16px 20px;
   }
 }
 
+.dashboard-greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashboard-wordmark {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dashboard-greeting h1 {
+  font-size: 26px;
+}
+
+.dashboard-subtitle {
+  color: var(--text);
+  font-size: 15px;
+}
+
 .dashboard-user {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   color: var(--text-h);
   font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(230, 126, 34, 0.14);
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .coin-badge {
@@ -179,39 +219,11 @@
   padding: 28px;
 }
 
-/* Pet nameplate */
-.pet-nameplate-wrap {
-  max-width: 1024px;
-  width: calc(100% - 64px);
-  margin: 24px auto -14px;
-  position: relative;
-  z-index: 1;
-  text-align: center;
-
-  @media (max-width: 720px) {
-    width: calc(100% - 40px);
-  }
-}
-
-.pet-nameplate {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
-  font-size: 15px;
-  letter-spacing: 0.2px;
-  box-shadow: var(--shadow);
-}
-
 /* Pet hero */
 .pet-hero {
   max-width: 1024px;
   width: calc(100% - 64px);
-  margin: 0 auto 0;
+  margin: 24px auto 0;
   border-radius: 20px;
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -636,6 +648,103 @@
   margin-top: 2px;
 }
 
+/* Today's meals */
+.todays-meals-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.todays-meals-header h2 {
+  margin: 0;
+}
+
+.todays-meals-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.todays-meals-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.todays-meal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.todays-meal-name {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.todays-meal-macros {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Water tracker */
+.water-tracker-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.water-tracker-header h2 {
+  margin: 0;
+}
+
+.water-tracker-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.water-cups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.water-cup {
+  font-size: 26px;
+  opacity: 0.25;
+  filter: grayscale(1);
+  transition: opacity 0.2s, filter 0.2s, transform 0.2s;
+}
+
+.water-cup.is-full {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.05);
+}
+
+.water-tracker-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.water-tracker-actions .primary-btn,
+.water-tracker-actions .secondary-btn {
+  flex: 1;
+}
+
 /* Food log form */
 .food-log-form {
   display: flex;
@@ -652,16 +761,28 @@
   flex: 1;
 }
 
+.field span {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
 .field input {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  padding: 13px 14px;
+  font-size: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
   background: var(--bg);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input:hover {
+  border-color: var(--accent-border);
 }
 
 .field input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
 .field-row {
@@ -670,24 +791,34 @@
 }
 
 .primary-btn {
-  padding: 12px 20px;
+  padding: 14px 22px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   color: #fff;
   background: var(--accent);
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  box-shadow: 0 4px 12px rgba(170, 59, 255, 0.28);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
 }
 
 .primary-btn:hover {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(170, 59, 255, 0.34);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
 }
 
 .primary-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .form-message {
@@ -741,6 +872,37 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.weight-section {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.weight-section h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-h);
+  margin: 0 0 16px;
+}
+
+.weight-forms {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.weight-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.weight-form .field {
+  margin-bottom: 0;
 }
 
 .progress-charts {
