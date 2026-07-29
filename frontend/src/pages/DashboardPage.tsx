@@ -19,6 +19,8 @@ function DashboardPage() {
   const [petName, setPetName] = useState('Binky');
   const [equippedBackground, setEquippedBackground] = useState('meadow');
   const [equippedFurniture, setEquippedFurniture] = useState<string[]>([]);
+  const [equippedColor, setEquippedColor] = useState('green');
+  const [equippedHairstyle, setEquippedHairstyle] = useState('default');
   const [loginBonusNotice, setLoginBonusNotice] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('log');
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,6 +67,8 @@ function DashboardPage() {
         setCoins(data.coins);
         setEquippedBackground(data.equippedBackground);
         setEquippedFurniture(data.equippedFurniture);
+        setEquippedColor(data.equippedColor);
+        setEquippedHairstyle(data.equippedHairstyle);
       })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,6 +170,8 @@ function DashboardPage() {
           reactionKey={reactionKey}
           background={equippedBackground}
           furniture={equippedFurniture}
+          color={equippedColor}
+          hairstyle={equippedHairstyle}
         />
       </section>
 
@@ -218,6 +224,8 @@ function DashboardPage() {
                 setCoins(state.coins);
                 setEquippedBackground(state.equippedBackground);
                 setEquippedFurniture(state.equippedFurniture);
+                setEquippedColor(state.equippedColor);
+                setEquippedHairstyle(state.equippedHairstyle);
               }}
             />
           </section>

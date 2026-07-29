@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../config';
 import { BACKGROUNDS, FURNITURE } from './PetSceneAssets';
+import PetCreature from './PetCreature';
 import { useAuth } from '../context/AuthContext';
+
+type ItemType = 'background' | 'furniture' | 'color' | 'hairstyle';
 
 type ShopTabProps = {
   userId: string;
@@ -10,7 +13,7 @@ type ShopTabProps = {
 
 type CatalogItem = {
   id: string;
-  type: 'background' | 'furniture';
+  type: ItemType;
   name: string;
   price: number;
 };
@@ -20,22 +23,51 @@ type ShopState = {
   ownedItems: string[];
   equippedBackground: string;
   equippedFurniture: string[];
+  equippedColor: string;
+  equippedHairstyle: string;
 };
 
-function ItemPreview({ id, type }: { id: string; type: 'background' | 'furniture' }) {
-  const asset = type === 'background' ? BACKGROUNDS[id] : FURNITURE[id];
-  if (!asset) return null;
+const SUB_TABS: { key: ItemType; label: string }[] = [
+  { key: 'background', label: 'Backgrounds' },
+  { key: 'furniture', label: 'Furniture' },
+  { key: 'color', label: 'Colors' },
+  { key: 'hairstyle', label: 'Hairstyles' },
+];
+
+function ItemPreview({ id, type }: { id: string; type: ItemType }) {
+  if (type === 'background') {
+    const asset = BACKGROUNDS[id];
+    if (!asset) return null;
+    return (
+      <svg viewBox="0 0 200 220" className="shop-item-preview">
+        {asset.render()}
+      </svg>
+    );
+  }
+
+  if (type === 'furniture') {
+    const asset = FURNITURE[id];
+    if (!asset) return null;
+    return (
+      <svg viewBox="0 0 200 220" className="shop-item-preview">
+        {BACKGROUNDS.meadow.render()}
+        {asset.render()}
+      </svg>
+    );
+  }
+
+  if (type === 'color') {
+    return (
+      <div className="shop-item-preview shop-item-preview-pet">
+        <PetCreature mood="neutral" color={id} hairstyle="default" />
+      </div>
+    );
+  }
 
   return (
-    <svg viewBox="0 0 200 220" className="shop-item-preview">
-      {type === 'background' && asset.render()}
-      {type === 'furniture' && (
-        <>
-          {BACKGROUNDS.meadow.render()}
-          {asset.render()}
-        </>
-      )}
-    </svg>
+    <div className="shop-item-preview shop-item-preview-pet">
+      <PetCreature mood="neutral" color="green" hairstyle={id} />
+    </div>
   );
 }
 
@@ -47,6 +79,7 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
   const [error, setError] = useState('');
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [subTab, setSubTab] = useState<ItemType>('background');
 
   useEffect(() => {
     Promise.all([
@@ -105,7 +138,13 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
       } else {
         setState((prev) =>
           prev
-            ? { ...prev, equippedBackground: data.equippedBackground, equippedFurniture: data.equippedFurniture }
+            ? {
+                ...prev,
+                equippedBackground: data.equippedBackground,
+                equippedFurniture: data.equippedFurniture,
+                equippedColor: data.equippedColor,
+                equippedHairstyle: data.equippedHairstyle,
+              }
             : prev
         );
       }
@@ -149,12 +188,16 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
 
   const owned = (id: string, price: number) => price === 0 || state.ownedItems.includes(id);
 
+  function isSingleSlotEquipped(item: CatalogItem) {
+    if (item.type === 'background') return state!.equippedBackground === item.id;
+    if (item.type === 'color') return state!.equippedColor === item.id;
+    if (item.type === 'hairstyle') return state!.equippedHairstyle === item.id;
+    return false;
+  }
+
   function renderItem(item: CatalogItem) {
     const isOwned = owned(item.id, item.price);
-    const isEquipped =
-      item.type === 'background'
-        ? state!.equippedBackground === item.id
-        : state!.equippedFurniture.includes(item.id);
+    const isEquipped = item.type === 'furniture' ? state!.equippedFurniture.includes(item.id) : isSingleSlotEquipped(item);
     const pending = pendingItemId === item.id;
     const canAfford = state!.coins >= item.price;
 
@@ -169,7 +212,7 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
             type="button"
             className={`secondary-btn ${isEquipped ? 'is-equipped' : ''}`}
             onClick={() => handleEquip(item)}
-            disabled={pending || (item.type === 'background' && isEquipped)}
+            disabled={pending || (item.type !== 'furniture' && isEquipped)}
           >
             {pending ? '...' : isEquipped ? (item.type === 'furniture' ? 'Placed (tap to remove)' : 'Equipped') : 'Equip'}
           </button>
@@ -187,8 +230,7 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
     );
   }
 
-  const backgrounds = catalog.filter((i) => i.type === 'background');
-  const furniture = catalog.filter((i) => i.type === 'furniture');
+  const itemsForSubTab = catalog.filter((i) => i.type === subTab);
 
   return (
     <div className="shop-tab">
@@ -197,13 +239,22 @@ function ShopTab({ userId, onStateChange }: ShopTabProps) {
         <div className="coin-badge">🪙 {state.coins} coins</div>
       </div>
 
+      <div className="shop-subtabs">
+        {SUB_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            className={`shop-subtab-btn ${subTab === tab.key ? 'active' : ''}`}
+            onClick={() => setSubTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {error && <p className="form-message error">{error}</p>}
 
-      <h3 className="shop-section-title">Backgrounds</h3>
-      <ul className="shop-grid">{backgrounds.map(renderItem)}</ul>
-
-      <h3 className="shop-section-title">Furniture</h3>
-      <ul className="shop-grid">{furniture.map(renderItem)}</ul>
+      <ul className="shop-grid">{itemsForSubTab.map(renderItem)}</ul>
 
       <div className="danger-zone">
         <h3 className="shop-section-title">Danger zone</h3>

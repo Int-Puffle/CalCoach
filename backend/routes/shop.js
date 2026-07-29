@@ -31,6 +31,8 @@ router.get('/state/:userId', async (req, res) => {
       ownedItems: petState.ownedItems,
       equippedBackground: petState.equippedBackground,
       equippedFurniture: petState.equippedFurniture,
+      equippedColor: petState.equippedColor,
+      equippedHairstyle: petState.equippedHairstyle,
       error: '',
     });
   } catch (err) {
@@ -96,8 +98,8 @@ router.post('/purchase', async (req, res) => {
   }
 });
 
-// POST /api/shop/equip - set the background (single slot) or toggle a
-// furniture piece on/off (multiple allowed at once)
+// POST /api/shop/equip - set a single-slot item (background/color/hairstyle)
+// or toggle a furniture piece on/off (multiple furniture allowed at once)
 router.post('/equip', async (req, res) => {
   try {
     const { userId, itemId } = req.body;
@@ -115,6 +117,10 @@ router.post('/equip', async (req, res) => {
 
     if (item.type === 'background') {
       petState.equippedBackground = itemId;
+    } else if (item.type === 'color') {
+      petState.equippedColor = itemId;
+    } else if (item.type === 'hairstyle') {
+      petState.equippedHairstyle = itemId;
     } else {
       const idx = petState.equippedFurniture.indexOf(itemId);
       if (idx === -1) {
@@ -129,6 +135,8 @@ router.post('/equip', async (req, res) => {
     res.status(200).json({
       equippedBackground: petState.equippedBackground,
       equippedFurniture: petState.equippedFurniture,
+      equippedColor: petState.equippedColor,
+      equippedHairstyle: petState.equippedHairstyle,
       error: '',
     });
   } catch (err) {

@@ -8,6 +8,8 @@ type PetDisplayProps = {
   reactionKey?: number;
   background?: string;
   furniture?: string[];
+  color?: string;
+  hairstyle?: string;
 };
 
 const moodLabels: Record<string, string> = {
@@ -17,7 +19,16 @@ const moodLabels: Record<string, string> = {
   sick: 'Not feeling great',
 };
 
-function PetDisplay({ mood, moodScore, reaction, reactionKey, background = 'meadow', furniture = [] }: PetDisplayProps) {
+function PetDisplay({
+  mood,
+  moodScore,
+  reaction,
+  reactionKey,
+  background = 'meadow',
+  furniture = [],
+  color = 'green',
+  hairstyle = 'default',
+}: PetDisplayProps) {
   const [activeReaction, setActiveReaction] = useState<'good' | 'neutral' | 'bad' | null>(null);
 
   useEffect(() => {
@@ -29,7 +40,14 @@ function PetDisplay({ mood, moodScore, reaction, reactionKey, background = 'mead
 
   return (
     <div className="pet-display">
-      <PetScene mood={mood} reaction={activeReaction} background={background} furniture={furniture} />
+      <PetScene
+        mood={mood}
+        reaction={activeReaction}
+        background={background}
+        furniture={furniture}
+        color={color}
+        hairstyle={hairstyle}
+      />
       <div className="pet-info">
         <p className="pet-mood-label">{moodLabels[mood] || 'Doing okay'}</p>
         <div className="mood-bar-track">

@@ -6,9 +6,11 @@ type PetSceneProps = {
   reaction?: 'good' | 'neutral' | 'bad' | null;
   background: string;
   furniture: string[];
+  color?: string;
+  hairstyle?: string;
 };
 
-function PetScene({ mood, reaction, background, furniture }: PetSceneProps) {
+function PetScene({ mood, reaction, background, furniture, color, hairstyle }: PetSceneProps) {
   const bg = BACKGROUNDS[background] || BACKGROUNDS.meadow;
 
   return (
@@ -22,7 +24,7 @@ function PetScene({ mood, reaction, background, furniture }: PetSceneProps) {
           return item ? <g key={id}>{item.render()}</g> : null;
         })}
       </svg>
-      <PetCreature mood={mood} reaction={reaction} />
+      <PetCreature mood={mood} reaction={reaction} color={color} hairstyle={hairstyle} />
     </div>
   );
 }

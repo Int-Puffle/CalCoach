@@ -19,6 +19,8 @@ describe('GET /api/shop/state/:userId', () => {
     expect(res.status).toBe(200);
     expect(res.body.coins).toBe(0);
     expect(res.body.equippedBackground).toBe('meadow');
+    expect(res.body.equippedColor).toBe('green');
+    expect(res.body.equippedHairstyle).toBe('default');
     expect(res.body.ownedItems).toEqual([]);
   });
 });
@@ -111,5 +113,34 @@ describe('POST /api/shop/equip', () => {
 
     const off = await request(app).post('/api/shop/equip').send({ userId: userId.toString(), itemId: 'rug' });
     expect(off.body.equippedFurniture).not.toContain('rug');
+  });
+
+  it('swaps the single color slot rather than toggling', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    await PetState.create({ userId, ownedItems: ['blue', 'pink'] });
+
+    await request(app).post('/api/shop/equip').send({ userId: userId.toString(), itemId: 'blue' });
+    const res = await request(app).post('/api/shop/equip').send({ userId: userId.toString(), itemId: 'pink' });
+
+    expect(res.body.equippedColor).toBe('pink');
+  });
+
+  it('swaps the single hairstyle slot rather than toggling', async () => {
+    const userId = new mongoose.Types.ObjectId();
+    await PetState.create({ userId, ownedItems: ['mohawk', 'curly'] });
+
+    await request(app).post('/api/shop/equip').send({ userId: userId.toString(), itemId: 'mohawk' });
+    const res = await request(app).post('/api/shop/equip').send({ userId: userId.toString(), itemId: 'curly' });
+
+    expect(res.body.equippedHairstyle).toBe('curly');
+  });
+
+  it('lets free default color and hairstyle be equipped without owning them', async () => {
+    const userId = new mongoose.Types.ObjectId().toString();
+    const color = await request(app).post('/api/shop/equip').send({ userId, itemId: 'green' });
+    expect(color.body.equippedColor).toBe('green');
+
+    const hairstyle = await request(app).post('/api/shop/equip').send({ userId, itemId: 'default' });
+    expect(hairstyle.body.equippedHairstyle).toBe('default');
   });
 });

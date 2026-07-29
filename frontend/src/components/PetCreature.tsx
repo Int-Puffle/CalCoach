@@ -3,13 +3,32 @@ import { useEffect, useState } from 'react';
 type PetCreatureProps = {
   mood: string;
   reaction?: 'good' | 'neutral' | 'bad' | null;
+  color?: string;
+  hairstyle?: string;
+};
+
+type BodyColors = {
+  main: string;
+  belly: string;
+  dark: string;
+  darker: string;
+  accent: string;
 };
 
 const VARIANT_COUNT = 3;
 
+const BODY_COLORS: Record<string, BodyColors> = {
+  green: { main: '#5f9e48', belly: '#86c766', dark: '#4c8038', darker: '#3d6a2e', accent: '#79c25a' },
+  blue: { main: '#4a86c9', belly: '#7db3e8', dark: '#3868a3', darker: '#2b4f7a', accent: '#8fc5f0' },
+  pink: { main: '#e0699a', belly: '#f2a3c4', dark: '#c14d7d', darker: '#9c3a63', accent: '#f5b8d3' },
+  orange: { main: '#e0904a', belly: '#f2b87d', dark: '#c1723a', darker: '#96592c', accent: '#f5c191' },
+};
+
+type FaceProps = { colors: BodyColors };
+
 // --- Happy ---
 
-function HappyFace1() {
+function HappyFace1(_props: FaceProps) {
   return (
     <g>
       <path d="M58 98 Q75 82 92 98" fill="none" stroke="#2b2b2b" strokeWidth="6" strokeLinecap="round" />
@@ -20,7 +39,7 @@ function HappyFace1() {
   );
 }
 
-function HappyFace2() {
+function HappyFace2(_props: FaceProps) {
   return (
     <g>
       <ellipse cx="75" cy="98" rx="15" ry="17" fill="#fff" />
@@ -35,7 +54,7 @@ function HappyFace2() {
   );
 }
 
-function HappyFace3() {
+function HappyFace3(_props: FaceProps) {
   return (
     <g>
       <path d="M60 100 Q75 92 90 100" fill="none" stroke="#2b2b2b" strokeWidth="6" strokeLinecap="round" />
@@ -49,7 +68,7 @@ function HappyFace3() {
 
 // --- Neutral ---
 
-function NeutralFace1() {
+function NeutralFace1({ colors }: FaceProps) {
   return (
     <g>
       <ellipse cx="75" cy="100" rx="14" ry="16" fill="#fff" />
@@ -58,14 +77,14 @@ function NeutralFace1() {
       <circle cx="126" cy="103" r="6.5" fill="#2b2b2b" />
       <circle cx="73.5" cy="100.5" r="2" fill="#fff" />
       <circle cx="123.5" cy="100.5" r="2" fill="#fff" />
-      <rect className="pet-eyelid" x="60" y="84" width="30" height="16" rx="8" fill="#5f9e48" />
-      <rect className="pet-eyelid" x="110" y="84" width="30" height="16" rx="8" fill="#5f9e48" />
+      <rect className="pet-eyelid" x="60" y="84" width="30" height="16" rx="8" fill={colors.main} />
+      <rect className="pet-eyelid" x="110" y="84" width="30" height="16" rx="8" fill={colors.main} />
       <path d="M88 138 Q100 144 112 138" fill="none" stroke="#2b2b2b" strokeWidth="4.5" strokeLinecap="round" />
     </g>
   );
 }
 
-function NeutralFace2() {
+function NeutralFace2(_props: FaceProps) {
   return (
     <g>
       <ellipse cx="75" cy="100" rx="14" ry="16" fill="#fff" />
@@ -77,21 +96,21 @@ function NeutralFace2() {
   );
 }
 
-function NeutralFace3() {
+function NeutralFace3({ colors }: FaceProps) {
   return (
     <g>
       <path d="M62 100 Q75 106 88 100" fill="none" stroke="#2b2b2b" strokeWidth="5" strokeLinecap="round" />
       <path d="M112 100 Q125 106 138 100" fill="none" stroke="#2b2b2b" strokeWidth="5" strokeLinecap="round" />
       <ellipse cx="100" cy="140" rx="6" ry="8" fill="#7a2e2e" />
-      <text x="140" y="45" className="pet-zzz pet-zzz-1" fontSize="16" fontFamily="sans-serif" fill="#4c8038">Z</text>
-      <text x="152" y="32" className="pet-zzz pet-zzz-2" fontSize="12" fontFamily="sans-serif" fill="#4c8038">Z</text>
+      <text x="140" y="45" className="pet-zzz pet-zzz-1" fontSize="16" fontFamily="sans-serif" fill={colors.dark}>Z</text>
+      <text x="152" y="32" className="pet-zzz pet-zzz-2" fontSize="12" fontFamily="sans-serif" fill={colors.dark}>Z</text>
     </g>
   );
 }
 
 // --- Sad ---
 
-function SadFace1() {
+function SadFace1({ colors }: FaceProps) {
   return (
     <g>
       <ellipse cx="75" cy="102" rx="14" ry="16" fill="#fff" />
@@ -100,15 +119,15 @@ function SadFace1() {
       <circle cx="125" cy="107" r="6.5" fill="#2b2b2b" />
       <path d="M60 92 Q75 86 88 93" fill="none" stroke="#2b2b2b" strokeWidth="4" strokeLinecap="round" />
       <path d="M112 93 Q125 86 140 92" fill="none" stroke="#2b2b2b" strokeWidth="4" strokeLinecap="round" />
-      <path d="M65 90 Q75 84 90 90 L90 90 Q75 82 65 90 Z" fill="#4c8038" />
-      <path d="M110 90 Q125 84 135 90 L135 90 Q125 82 110 90 Z" fill="#4c8038" />
+      <path d="M65 90 Q75 84 90 90 L90 90 Q75 82 65 90 Z" fill={colors.dark} />
+      <path d="M110 90 Q125 84 135 90 L135 90 Q125 82 110 90 Z" fill={colors.dark} />
       <path d="M85 140 Q100 132 115 140" fill="none" stroke="#2b2b2b" strokeWidth="5" strokeLinecap="round" />
       <ellipse className="pet-tear" cx="88" cy="118" rx="4" ry="6" fill="#7fd0e8" opacity="0.85" />
     </g>
   );
 }
 
-function SadFace2() {
+function SadFace2(_props: FaceProps) {
   return (
     <g>
       <line x1="64" y1="100" x2="86" y2="100" stroke="#2b2b2b" strokeWidth="5" strokeLinecap="round" />
@@ -122,7 +141,7 @@ function SadFace2() {
   );
 }
 
-function SadFace3() {
+function SadFace3(_props: FaceProps) {
   return (
     <g>
       <ellipse cx="75" cy="99" rx="15" ry="18" fill="#fff" />
@@ -138,7 +157,7 @@ function SadFace3() {
 
 // --- Sick ---
 
-function SickFace1() {
+function SickFace1(_props: FaceProps) {
   return (
     <g stroke="#2b2b2b" strokeWidth="5" strokeLinecap="round">
       <line x1="66" y1="92" x2="84" y2="110" />
@@ -150,7 +169,7 @@ function SickFace1() {
   );
 }
 
-function SickFace2() {
+function SickFace2(_props: FaceProps) {
   return (
     <g>
       <path d="M75 92 Q85 92 85 102 Q85 110 75 110 Q68 110 68 103" fill="none" stroke="#2b2b2b" strokeWidth="3" strokeLinecap="round" />
@@ -161,11 +180,11 @@ function SickFace2() {
   );
 }
 
-function SickFace3() {
+function SickFace3({ colors }: FaceProps) {
   return (
     <g>
-      <path d="M62 100 Q75 96 88 100 L88 104 Q75 108 62 104 Z" fill="#3d6a2e" opacity="0.75" />
-      <path d="M112 100 Q125 96 138 100 L138 104 Q125 108 112 104 Z" fill="#3d6a2e" opacity="0.75" />
+      <path d="M62 100 Q75 96 88 100 L88 104 Q75 108 62 104 Z" fill={colors.darker} opacity="0.75" />
+      <path d="M112 100 Q125 96 138 100 L138 104 Q125 108 112 104 Z" fill={colors.darker} opacity="0.75" />
       <circle cx="75" cy="103" r="3" fill="#2b2b2b" />
       <circle cx="125" cy="103" r="3" fill="#2b2b2b" />
       <path d="M92 136 Q100 132 108 136" fill="none" stroke="#2b2b2b" strokeWidth="4" strokeLinecap="round" />
@@ -173,14 +192,78 @@ function SickFace3() {
   );
 }
 
-const FACE_VARIANTS: Record<string, Array<() => React.JSX.Element>> = {
+const FACE_VARIANTS: Record<string, Array<(props: FaceProps) => React.JSX.Element>> = {
   happy: [HappyFace1, HappyFace2, HappyFace3],
   neutral: [NeutralFace1, NeutralFace2, NeutralFace3],
   sad: [SadFace1, SadFace2, SadFace3],
   sick: [SickFace1, SickFace2, SickFace3],
 };
 
-function PetCreature({ mood, reaction }: PetCreatureProps) {
+function Hairstyle({ variant, colors }: { variant: string; colors: BodyColors }) {
+  if (variant === 'mohawk') {
+    return (
+      <g>
+        <path d="M85 20 L100 -15 L115 20 Z" fill={colors.dark} />
+        <path d="M92 25 L100 0 L108 25 Z" fill={colors.accent} />
+      </g>
+    );
+  }
+
+  if (variant === 'curly') {
+    return (
+      <g fill={colors.dark}>
+        <circle cx="45" cy="55" r="12" />
+        <circle cx="58" cy="35" r="11" />
+        <circle cx="74" cy="22" r="12" />
+        <circle cx="90" cy="15" r="11" />
+        <circle cx="110" cy="15" r="11" />
+        <circle cx="126" cy="22" r="12" />
+        <circle cx="142" cy="35" r="11" />
+        <circle cx="155" cy="55" r="12" />
+      </g>
+    );
+  }
+
+  if (variant === 'flower') {
+    return (
+      <g>
+        <g fill={colors.dark}>
+          <circle cx="52" cy="60" r="15" />
+          <circle cx="68" cy="38" r="14" />
+          <circle cx="88" cy="26" r="15" />
+          <circle cx="112" cy="26" r="15" />
+          <circle cx="132" cy="38" r="14" />
+          <circle cx="148" cy="60" r="15" />
+        </g>
+        <g>
+          <circle cx="92" cy="10" r="5" fill="#f6a5c0" />
+          <circle cx="108" cy="10" r="5" fill="#f6a5c0" />
+          <circle cx="100" cy="2" r="5" fill="#f6a5c0" />
+          <circle cx="100" cy="18" r="5" fill="#f6a5c0" />
+          <circle cx="100" cy="10" r="5" fill="#ffe27a" />
+        </g>
+      </g>
+    );
+  }
+
+  // default: moss tufts + leaf sprigs
+  return (
+    <g>
+      <g fill={colors.dark}>
+        <circle cx="52" cy="60" r="15" />
+        <circle cx="68" cy="38" r="14" />
+        <circle cx="88" cy="26" r="15" />
+        <circle cx="112" cy="26" r="15" />
+        <circle cx="132" cy="38" r="14" />
+        <circle cx="148" cy="60" r="15" />
+      </g>
+      <path d="M92 18 Q86 4 96 -2 Q104 6 98 18 Z" fill={colors.accent} />
+      <path d="M104 20 Q112 6 122 4 Q118 16 108 22 Z" fill={colors.accent} />
+    </g>
+  );
+}
+
+function PetCreature({ mood, reaction, color = 'green', hairstyle = 'default' }: PetCreatureProps) {
   const normalizedMood = ['happy', 'neutral', 'sad', 'sick'].includes(mood) ? mood : 'neutral';
   const [variant, setVariant] = useState(0);
 
@@ -188,6 +271,7 @@ function PetCreature({ mood, reaction }: PetCreatureProps) {
     setVariant(Math.floor(Math.random() * VARIANT_COUNT));
   }, [normalizedMood]);
 
+  const colors = BODY_COLORS[color] || BODY_COLORS.green;
   const Face = FACE_VARIANTS[normalizedMood][variant];
   const reactionClass = reaction ? ` is-reacting-${reaction}` : '';
 
@@ -232,41 +316,31 @@ function PetCreature({ mood, reaction }: PetCreatureProps) {
 
       <g className="pet-body-wrap">
         <g className="pet-leg pet-leg-left">
-          <rect x="68" y="168" width="26" height="34" rx="13" fill="#4c8038" />
-          <ellipse cx="81" cy="203" rx="18" ry="9" fill="#3d6a2e" />
+          <rect x="68" y="168" width="26" height="34" rx="13" fill={colors.dark} />
+          <ellipse cx="81" cy="203" rx="18" ry="9" fill={colors.darker} />
         </g>
         <g className="pet-leg pet-leg-right">
-          <rect x="106" y="168" width="26" height="34" rx="13" fill="#4c8038" />
-          <ellipse cx="119" cy="203" rx="18" ry="9" fill="#3d6a2e" />
+          <rect x="106" y="168" width="26" height="34" rx="13" fill={colors.dark} />
+          <ellipse cx="119" cy="203" rx="18" ry="9" fill={colors.darker} />
         </g>
 
         <g className="pet-arm pet-arm-left">
-          <rect x="26" y="103" width="26" height="62" rx="13" fill="#5f9e48" />
+          <rect x="26" y="103" width="26" height="62" rx="13" fill={colors.main} />
         </g>
         <g className="pet-arm pet-arm-right">
-          <rect x="148" y="103" width="26" height="62" rx="13" fill="#5f9e48" />
+          <rect x="148" y="103" width="26" height="62" rx="13" fill={colors.main} />
         </g>
 
         <g className="pet-body">
-          <ellipse cx="100" cy="115" rx="68" ry="78" fill="#5f9e48" />
-          <ellipse cx="100" cy="140" rx="38" ry="42" fill="#86c766" />
+          <ellipse cx="100" cy="115" rx="68" ry="78" fill={colors.main} />
+          <ellipse cx="100" cy="140" rx="38" ry="42" fill={colors.belly} />
 
-          <g fill="#4c8038">
-            <circle cx="52" cy="60" r="15" />
-            <circle cx="68" cy="38" r="14" />
-            <circle cx="88" cy="26" r="15" />
-            <circle cx="112" cy="26" r="15" />
-            <circle cx="132" cy="38" r="14" />
-            <circle cx="148" cy="60" r="15" />
-          </g>
-
-          <path d="M92 18 Q86 4 96 -2 Q104 6 98 18 Z" fill="#79c25a" />
-          <path d="M104 20 Q112 6 122 4 Q118 16 108 22 Z" fill="#79c25a" />
+          <Hairstyle variant={hairstyle} colors={colors} />
 
           <ellipse cx="65" cy="122" rx="9" ry="6" fill="#ffb6c8" opacity="0.55" />
           <ellipse cx="135" cy="122" rx="9" ry="6" fill="#ffb6c8" opacity="0.55" />
 
-          <Face />
+          <Face colors={colors} />
         </g>
       </g>
     </svg>

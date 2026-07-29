@@ -13,6 +13,8 @@ const petStateSchema = new mongoose.Schema({
   ownedItems: { type: [String], default: [] },
   equippedBackground: { type: String, default: 'meadow' },
   equippedFurniture: { type: [String], default: [] },
+  equippedColor: { type: String, default: 'green' },
+  equippedHairstyle: { type: String, default: 'default' },
   petName: { type: String, default: 'Binky' },
 });
 
